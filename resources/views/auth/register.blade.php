@@ -4,9 +4,9 @@
 
         <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            <x-input-label for="namauser" :value="__('Nama User')" />
+            <x-text-input id="namauser" class="block mt-1 w-full" type="text" name="namauser" :value="old('namauser')" required autofocus autocomplete="namauser" />
+            <x-input-error :messages="$errors->get('namauser')" class="mt-2" />
         </div>
 
         <!-- Email Address -->
