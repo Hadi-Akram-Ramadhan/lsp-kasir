@@ -9,29 +9,70 @@ require_once $root_path . 'auth/auth.php';
 // Check if user has administrator role
 checkRole(['administrator']);
 
+$message = '';
+$messageType = '';
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
-        switch ($_POST['action']) {
-            case 'add':
-                $table_number = $_POST['table_number'];
-                $stmt = $conn->prepare("INSERT INTO tables (table_number) VALUES (?)");
-                $stmt->execute([$table_number]);
-                break;
+        try {
+            switch ($_POST['action']) {
+                case 'add':
+                    $table_number = $_POST['table_number'];
+                    
+                    // Check if table number already exists
+                    $stmt = $conn->prepare("SELECT COUNT(*) FROM tables WHERE table_number = ?");
+                    $stmt->execute([$table_number]);
+                    if ($stmt->fetchColumn() > 0) {
+                        $message = "Nomor meja $table_number sudah ada!";
+                        $messageType = "danger";
+                    } else {
+                        $stmt = $conn->prepare("INSERT INTO tables (table_number) VALUES (?)");
+                        $stmt->execute([$table_number]);
+                        $message = "Meja berhasil ditambahkan!";
+                        $messageType = "success";
+                    }
+                    break;
 
-            case 'edit':
-                $id = $_POST['id'];
-                $table_number = $_POST['table_number']; 
-                $status = $_POST['status'];
-                $stmt = $conn->prepare("UPDATE tables SET table_number = ?, status = ? WHERE id = ?");
-                $stmt->execute([$table_number, $status, $id]);
-                break;
+                case 'edit':
+                    $id = $_POST['id'];
+                    $table_number = $_POST['table_number']; 
+                    $status = $_POST['status'];
+                    
+                    // Check if table number already exists for other tables
+                    $stmt = $conn->prepare("SELECT COUNT(*) FROM tables WHERE table_number = ? AND id != ?");
+                    $stmt->execute([$table_number, $id]);
+                    if ($stmt->fetchColumn() > 0) {
+                        $message = "Nomor meja $table_number sudah ada!";
+                        $messageType = "danger";
+                    } else {
+                        $stmt = $conn->prepare("UPDATE tables SET table_number = ?, status = ? WHERE id = ?");
+                        $stmt->execute([$table_number, $status, $id]);
+                        $message = "Meja berhasil diupdate!";
+                        $messageType = "success";
+                    }
+                    break;
 
-            case 'delete':
-                $id = $_POST['id'];
-                $stmt = $conn->prepare("DELETE FROM tables WHERE id = ?");
-                $stmt->execute([$id]);
-                break;
+                case 'delete':
+                    $id = $_POST['id'];
+                    
+                    // Check if table is being used in any order
+                    $stmt = $conn->prepare("SELECT COUNT(*) FROM orders WHERE table_id = ? AND status = 'pending'");
+                    $stmt->execute([$id]);
+                    if ($stmt->fetchColumn() > 0) {
+                        $message = "Meja tidak bisa dihapus karena sedang digunakan!";
+                        $messageType = "danger";
+                    } else {
+                        $stmt = $conn->prepare("DELETE FROM tables WHERE id = ?");
+                        $stmt->execute([$id]);
+                        $message = "Meja berhasil dihapus!";
+                        $messageType = "success";
+                    }
+                    break;
+            }
+        } catch (Exception $e) {
+            $message = "Terjadi kesalahan: " . $e->getMessage();
+            $messageType = "danger";
         }
         header('Location: tables.php');
         exit();
@@ -58,6 +99,13 @@ $tables = $stmt->fetchAll();
     <?php include '../components/navbar.php'; ?>
 
     <div class="container mt-4">
+        <?php if ($message): ?>
+        <div class="alert alert-<?php echo $messageType; ?> alert-dismissible fade show" role="alert">
+            <?php echo $message; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <?php endif; ?>
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Manajemen Meja</h2>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTableModal">

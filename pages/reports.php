@@ -92,6 +92,7 @@ switch ($report_type) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -99,6 +100,7 @@ switch ($report_type) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 </head>
+
 <body>
     <?php include '../components/navbar.php'; ?>
 
@@ -107,20 +109,20 @@ switch ($report_type) {
             <div class="card-header">
                 <ul class="nav nav-tabs card-header-tabs">
                     <li class="nav-item">
-                        <a class="nav-link <?php echo $report_type === 'sales' ? 'active' : ''; ?>" 
-                           href="?type=sales&start_date=<?php echo $start_date; ?>&end_date=<?php echo $end_date; ?>">
+                        <a class="nav-link <?php echo $report_type === 'sales' ? 'active' : ''; ?>"
+                            href="?type=sales&start_date=<?php echo $start_date; ?>&end_date=<?php echo $end_date; ?>">
                             Laporan Penjualan
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo $report_type === 'products' ? 'active' : ''; ?>"
-                           href="?type=products&start_date=<?php echo $start_date; ?>&end_date=<?php echo $end_date; ?>">
+                            href="?type=products&start_date=<?php echo $start_date; ?>&end_date=<?php echo $end_date; ?>">
                             Laporan Produk
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo $report_type === 'waiters' ? 'active' : ''; ?>"
-                           href="?type=waiters&start_date=<?php echo $start_date; ?>&end_date=<?php echo $end_date; ?>">
+                            href="?type=waiters&start_date=<?php echo $start_date; ?>&end_date=<?php echo $end_date; ?>">
                             Laporan Pelayan
                         </a>
                     </li>
@@ -148,64 +150,64 @@ switch ($report_type) {
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <?php if ($report_type === 'sales'): ?>
-                            <thead>
-                                <tr>
-                                    <th>Tanggal</th>
-                                    <th>Total Transaksi</th>
-                                    <th>Total Order</th>
-                                    <th>Total Item</th>
-                                    <th>Total Penjualan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($report_data as $row): ?>
-                                    <tr>
-                                        <td><?php echo date('d/m/Y', strtotime($row['date'])); ?></td>
-                                        <td><?php echo $row['total_transactions']; ?></td>
-                                        <td><?php echo $row['total_orders']; ?></td>
-                                        <td><?php echo $row['total_items']; ?></td>
-                                        <td>Rp <?php echo number_format($row['total_sales'], 0, ',', '.'); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Total Transaksi</th>
+                                <th>Total Order</th>
+                                <th>Total Item</th>
+                                <th>Total Penjualan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($report_data as $row): ?>
+                            <tr>
+                                <td><?php echo date('d/m/Y', strtotime($row['date'])); ?></td>
+                                <td><?php echo $row['total_transactions']; ?></td>
+                                <td><?php echo $row['total_orders']; ?></td>
+                                <td><?php echo $row['total_items']; ?></td>
+                                <td>Rp <?php echo number_format($row['total_sales'], 0, ',', '.'); ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
 
                         <?php elseif ($report_type === 'products'): ?>
-                            <thead>
-                                <tr>
-                                    <th>Produk</th>
-                                    <th>Total Terjual</th>
-                                    <th>Total Penjualan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($report_data as $row): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($row['product_name']); ?></td>
-                                        <td><?php echo $row['total_quantity']; ?></td>
-                                        <td>Rp <?php echo number_format($row['total_sales'], 0, ',', '.'); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
+                        <thead>
+                            <tr>
+                                <th>Produk</th>
+                                <th>Total Terjual</th>
+                                <th>Total Penjualan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($report_data as $row): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($row['product_name']); ?></td>
+                                <td><?php echo $row['total_quantity']; ?></td>
+                                <td>Rp <?php echo number_format($row['total_sales'], 0, ',', '.'); ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
 
                         <?php elseif ($report_type === 'waiters'): ?>
-                            <thead>
-                                <tr>
-                                    <th>Pelayan</th>
-                                    <th>Total Order</th>
-                                    <th>Total Item</th>
-                                    <th>Total Penjualan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($report_data as $row): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($row['waiter_name']); ?></td>
-                                        <td><?php echo $row['total_orders']; ?></td>
-                                        <td><?php echo $row['total_items']; ?></td>
-                                        <td>Rp <?php echo number_format($row['total_sales'], 0, ',', '.'); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
+                        <thead>
+                            <tr>
+                                <th>Pelayan</th>
+                                <th>Total Order</th>
+                                <th>Total Item</th>
+                                <th>Total Penjualan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($report_data as $row): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($row['waiter_name']); ?></td>
+                                <td><?php echo $row['total_orders']; ?></td>
+                                <td><?php echo $row['total_items']; ?></td>
+                                <td>Rp <?php echo number_format($row['total_sales'], 0, ',', '.'); ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
                         <?php endif; ?>
                     </table>
                 </div>
@@ -215,4 +217,5 @@ switch ($report_type) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html> 
+
+</html>

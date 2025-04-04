@@ -9,32 +9,73 @@ require_once $root_path . 'auth/auth.php';
 // Check if user has administrator or waiter role
 checkRole(['administrator', 'waiter']);
 
+$message = '';
+$messageType = '';
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
-        switch ($_POST['action']) {
-            case 'add':
-                $name = $_POST['name'];
-                $price = $_POST['price'];
-                $stock = $_POST['stock'];
-                $stmt = $conn->prepare("INSERT INTO products (name, price, stock) VALUES (?, ?, ?)");
-                $stmt->execute([$name, $price, $stock]);
-                break;
+        try {
+            switch ($_POST['action']) {
+                case 'add':
+                    $name = $_POST['name'];
+                    $price = $_POST['price'];
+                    $stock = $_POST['stock'];
 
-            case 'edit':
-                $id = $_POST['id'];
-                $name = $_POST['name'];
-                $price = $_POST['price'];
-                $stock = $_POST['stock'];
-                $stmt = $conn->prepare("UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?");
-                $stmt->execute([$name, $price, $stock, $id]);
-                break;
+                    // Check if product name already exists
+                    $stmt = $conn->prepare("SELECT COUNT(*) FROM products WHERE name = ?");
+                    $stmt->execute([$name]);
+                    if ($stmt->fetchColumn() > 0) {
+                        $message = "Produk dengan nama '$name' sudah ada!";
+                        $messageType = "danger";
+                    } else {
+                        $stmt = $conn->prepare("INSERT INTO products (name, price, stock) VALUES (?, ?, ?)");
+                        $stmt->execute([$name, $price, $stock]);
+                        $message = "Produk berhasil ditambahkan!";
+                        $messageType = "success";
+                    }
+                    break;
 
-            case 'delete':
-                $id = $_POST['id'];
-                $stmt = $conn->prepare("DELETE FROM products WHERE id = ?");
-                $stmt->execute([$id]);
-                break;
+                case 'edit':
+                    $id = $_POST['id'];
+                    $name = $_POST['name'];
+                    $price = $_POST['price'];
+                    $stock = $_POST['stock'];
+
+                    // Check if product name already exists for other products
+                    $stmt = $conn->prepare("SELECT COUNT(*) FROM products WHERE name = ? AND id != ?");
+                    $stmt->execute([$name, $id]);
+                    if ($stmt->fetchColumn() > 0) {
+                        $message = "Produk dengan nama '$name' sudah ada!";
+                        $messageType = "danger";
+                    } else {
+                        $stmt = $conn->prepare("UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?");
+                        $stmt->execute([$name, $price, $stock, $id]);
+                        $message = "Produk berhasil diupdate!";
+                        $messageType = "success";
+                    }
+                    break;
+
+                case 'delete':
+                    $id = $_POST['id'];
+
+                    // Check if product is being used in any order
+                    $stmt = $conn->prepare("SELECT COUNT(*) FROM order_items WHERE product_id = ?");
+                    $stmt->execute([$id]);
+                    if ($stmt->fetchColumn() > 0) {
+                        $message = "Produk tidak bisa dihapus karena sudah digunakan dalam order!";
+                        $messageType = "danger";
+                    } else {
+                        $stmt = $conn->prepare("DELETE FROM products WHERE id = ?");
+                        $stmt->execute([$id]);
+                        $message = "Produk berhasil dihapus!";
+                        $messageType = "success";
+                    }
+                    break;
+            }
+        } catch (Exception $e) {
+            $message = "Terjadi kesalahan: " . $e->getMessage();
+            $messageType = "danger";
         }
         header('Location: products.php');
         exit();
@@ -48,6 +89,7 @@ $products = $stmt->fetchAll();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,10 +97,18 @@ $products = $stmt->fetchAll();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 </head>
+
 <body>
     <?php include '../components/navbar.php'; ?>
 
     <div class="container mt-4">
+        <?php if ($message): ?>
+        <div class="alert alert-<?php echo $messageType; ?> alert-dismissible fade show" role="alert">
+            <?php echo $message; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <?php endif; ?>
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Manajemen Produk</h2>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
@@ -83,10 +133,12 @@ $products = $stmt->fetchAll();
                         <td>Rp <?php echo number_format($product['price'], 0, ',', '.'); ?></td>
                         <td><?php echo $product['stock']; ?></td>
                         <td>
-                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editProductModal<?php echo $product['id']; ?>">
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                data-bs-target="#editProductModal<?php echo $product['id']; ?>">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteProductModal<?php echo $product['id']; ?>">
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                data-bs-target="#deleteProductModal<?php echo $product['id']; ?>">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </td>
@@ -106,19 +158,23 @@ $products = $stmt->fetchAll();
                                         <input type="hidden" name="id" value="<?php echo $product['id']; ?>">
                                         <div class="mb-3">
                                             <label class="form-label">Nama Produk</label>
-                                            <input type="text" class="form-control" name="name" value="<?php echo htmlspecialchars($product['name']); ?>" required>
+                                            <input type="text" class="form-control" name="name"
+                                                value="<?php echo htmlspecialchars($product['name']); ?>" required>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Harga</label>
-                                            <input type="number" class="form-control" name="price" value="<?php echo $product['price']; ?>" required>
+                                            <input type="number" class="form-control" name="price"
+                                                value="<?php echo $product['price']; ?>" required>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Stok</label>
-                                            <input type="number" class="form-control" name="stock" value="<?php echo $product['stock']; ?>" required>
+                                            <input type="number" class="form-control" name="stock"
+                                                value="<?php echo $product['stock']; ?>" required>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Batal</button>
                                         <button type="submit" class="btn btn-primary">Simpan</button>
                                     </div>
                                 </form>
@@ -135,13 +191,15 @@ $products = $stmt->fetchAll();
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <p>Yakin ingin menghapus produk <?php echo htmlspecialchars($product['name']); ?>?</p>
+                                    <p>Yakin ingin menghapus produk <?php echo htmlspecialchars($product['name']); ?>?
+                                    </p>
                                 </div>
                                 <div class="modal-footer">
                                     <form method="POST">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="id" value="<?php echo $product['id']; ?>">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Batal</button>
                                         <button type="submit" class="btn btn-danger">Hapus</button>
                                     </form>
                                 </div>
@@ -189,4 +247,5 @@ $products = $stmt->fetchAll();
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html> 
+
+</html>
