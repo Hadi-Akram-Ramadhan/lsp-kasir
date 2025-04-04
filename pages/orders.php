@@ -1,0 +1,271 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$root_path = $_SERVER['DOCUMENT_ROOT'] . '/kasirdoy/';
+require_once $root_path . 'auth/auth.php';
+
+// Check if user has waiter role
+checkRole(['waiter']);
+
+// Handle form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action'])) {
+        switch ($_POST['action']) {
+            case 'add':
+                try {
+                    $conn->beginTransaction();
+                    
+                    // Create order
+                    $table_id = $_POST['table_id'];
+                    $waiter_id = $_SESSION['user_id'];
+                    
+                    $stmt = $conn->prepare("INSERT INTO orders (table_id, waiter_id) VALUES (?, ?)");
+                    $stmt->execute([$table_id, $waiter_id]);
+                    $order_id = $conn->lastInsertId();
+
+                    // Update table status
+                    $stmt = $conn->prepare("UPDATE tables SET status = 'occupied' WHERE id = ?");
+                    $stmt->execute([$table_id]);
+
+                    // Add order items
+                    $products = $_POST['products'];
+                    $quantities = $_POST['quantities'];
+                    
+                    for ($i = 0; $i < count($products); $i++) {
+                        if ($quantities[$i] > 0) {
+                            // Get product price
+                            $stmt = $conn->prepare("SELECT price FROM products WHERE id = ?");
+                            $stmt->execute([$products[$i]]);
+                            $product = $stmt->fetch();
+
+                            // Insert order item
+                            $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
+                            $stmt->execute([$order_id, $products[$i], $quantities[$i], $product['price']]);
+
+                            // Update stock
+                            $stmt = $conn->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+                            $stmt->execute([$quantities[$i], $products[$i]]);
+                        }
+                    }
+
+                    $conn->commit();
+                } catch (Exception $e) {
+                    $conn->rollBack();
+                    throw $e;
+                }
+                break;
+
+            case 'complete':
+                $order_id = $_POST['order_id'];
+                $table_id = $_POST['table_id'];
+
+                // Update order status
+                $stmt = $conn->prepare("UPDATE orders SET status = 'completed' WHERE id = ?");
+                $stmt->execute([$order_id]);
+
+                // Update table status
+                $stmt = $conn->prepare("UPDATE tables SET status = 'available' WHERE id = ?");
+                $stmt->execute([$table_id]);
+                break;
+
+            case 'cancel':
+                $order_id = $_POST['order_id'];
+                $table_id = $_POST['table_id'];
+
+                try {
+                    $conn->beginTransaction();
+
+                    // Get order items to restore stock
+                    $stmt = $conn->prepare("SELECT product_id, quantity FROM order_items WHERE order_id = ?");
+                    $stmt->execute([$order_id]);
+                    $items = $stmt->fetchAll();
+
+                    foreach ($items as $item) {
+                        // Restore stock
+                        $stmt = $conn->prepare("UPDATE products SET stock = stock + ? WHERE id = ?");
+                        $stmt->execute([$item['quantity'], $item['product_id']]);
+                    }
+
+                    // Update order status
+                    $stmt = $conn->prepare("UPDATE orders SET status = 'cancelled' WHERE id = ?");
+                    $stmt->execute([$order_id]);
+
+                    // Update table status
+                    $stmt = $conn->prepare("UPDATE tables SET status = 'available' WHERE id = ?");
+                    $stmt->execute([$table_id]);
+
+                    $conn->commit();
+                } catch (Exception $e) {
+                    $conn->rollBack();
+                    throw $e;
+                }
+                break;
+        }
+        header('Location: orders.php');
+        exit();
+    }
+}
+
+// Get available tables
+$stmt = $conn->query("SELECT * FROM tables WHERE status = 'available' ORDER BY table_number");
+$available_tables = $stmt->fetchAll();
+
+// Get products
+$stmt = $conn->query("SELECT * FROM products WHERE stock > 0 ORDER BY name");
+$products = $stmt->fetchAll();
+
+// Get active orders
+$stmt = $conn->prepare("
+    SELECT o.*, t.table_number, 
+           GROUP_CONCAT(CONCAT(p.name, ' (', oi.quantity, ')') SEPARATOR ', ') as items
+    FROM orders o
+    JOIN tables t ON o.table_id = t.id
+    LEFT JOIN order_items oi ON o.id = oi.order_id
+    LEFT JOIN products p ON oi.product_id = p.id
+    WHERE o.waiter_id = ? AND o.status = 'pending'
+    GROUP BY o.id
+    ORDER BY o.created_at DESC
+");
+$stmt->execute([$_SESSION['user_id']]);
+$active_orders = $stmt->fetchAll();
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entri Order - KasirDoy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+
+<body>
+    <?php include '../components/navbar.php'; ?>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Order Aktif</h5>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#addOrderModal">
+                            <i class="bi bi-plus"></i> Order Baru
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <?php if (empty($active_orders)): ?>
+                        <p class="text-center text-muted">Tidak ada order aktif</p>
+                        <?php else: ?>
+                        <?php foreach ($active_orders as $order): ?>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-title mb-0">
+                                        Meja <?php echo htmlspecialchars($order['table_number']); ?>
+                                    </h6>
+                                    <small class="text-muted">
+                                        <?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?>
+                                    </small>
+                                </div>
+                                <p class="card-text"><?php echo htmlspecialchars($order['items']); ?></p>
+                                <div class="btn-group">
+                                    <form method="POST" class="me-2">
+                                        <input type="hidden" name="action" value="complete">
+                                        <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
+                                        <input type="hidden" name="table_id" value="<?php echo $order['table_id']; ?>">
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="bi bi-check-circle"></i> Selesai
+                                        </button>
+                                    </form>
+                                    <form method="POST">
+                                        <input type="hidden" name="action" value="cancel">
+                                        <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
+                                        <input type="hidden" name="table_id" value="<?php echo $order['table_id']; ?>">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-x-circle"></i> Batal
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Order Modal -->
+    <div class="modal fade" id="addOrderModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Order Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST">
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="add">
+
+                        <div class="mb-3">
+                            <label class="form-label">Pilih Meja</label>
+                            <select class="form-select" name="table_id" required>
+                                <option value="">Pilih Meja...</option>
+                                <?php foreach ($available_tables as $table): ?>
+                                <option value="<?php echo $table['id']; ?>">
+                                    Meja <?php echo htmlspecialchars($table['table_number']); ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Pilih Produk</label>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Produk</th>
+                                            <th>Harga</th>
+                                            <th>Stok</th>
+                                            <th style="width: 150px;">Jumlah</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($products as $product): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($product['name']); ?></td>
+                                            <td>Rp <?php echo number_format($product['price'], 0, ',', '.'); ?></td>
+                                            <td><?php echo $product['stock']; ?></td>
+                                            <td>
+                                                <input type="hidden" name="products[]"
+                                                    value="<?php echo $product['id']; ?>">
+                                                <input type="number" class="form-control" name="quantities[]" min="0"
+                                                    max="<?php echo $product['stock']; ?>" value="0">
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
