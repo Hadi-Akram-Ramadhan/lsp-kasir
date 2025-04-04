@@ -86,6 +86,7 @@ $recent_transactions = $stmt->fetchAll();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -93,6 +94,7 @@ $recent_transactions = $stmt->fetchAll();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 </head>
+
 <body>
     <?php include '../components/navbar.php'; ?>
 
@@ -106,65 +108,74 @@ $recent_transactions = $stmt->fetchAll();
                     </div>
                     <div class="card-body">
                         <?php if (empty($pending_orders)): ?>
-                            <p class="text-center text-muted">Tidak ada order yang menunggu pembayaran</p>
+                        <p class="text-center text-muted">Tidak ada order yang menunggu pembayaran</p>
                         <?php else: ?>
-                            <?php foreach ($pending_orders as $order): ?>
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h6 class="card-title mb-0">
-                                                Meja <?php echo htmlspecialchars($order['table_number']); ?>
-                                            </h6>
-                                            <small class="text-muted">
-                                                <?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?>
-                                            </small>
-                                        </div>
-                                        <p class="mb-1"><strong>Pelayan:</strong> <?php echo htmlspecialchars($order['waiter_name']); ?></p>
-                                        <p class="mb-2"><strong>Items:</strong> <?php echo htmlspecialchars($order['items']); ?></p>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <h5 class="mb-0">Total: Rp <?php echo number_format($order['total_amount'], 0, ',', '.'); ?></h5>
-                                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#paymentModal<?php echo $order['order_id']; ?>">
-                                                <i class="bi bi-cash"></i> Proses Pembayaran
-                                            </button>
-                                        </div>
-                                    </div>
+                        <?php foreach ($pending_orders as $order): ?>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-title mb-0">
+                                        Meja <?php echo htmlspecialchars($order['table_number']); ?>
+                                    </h6>
+                                    <small class="text-muted">
+                                        <?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?>
+                                    </small>
                                 </div>
+                                <p class="mb-1"><strong>Pelayan:</strong>
+                                    <?php echo htmlspecialchars($order['waiter_name']); ?></p>
+                                <p class="mb-2"><strong>Items:</strong> <?php echo htmlspecialchars($order['items']); ?>
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Total: Rp
+                                        <?php echo number_format($order['total_amount'], 0, ',', '.'); ?></h5>
+                                    <button class="btn btn-primary" data-bs-toggle="modal"
+                                        data-bs-target="#paymentModal<?php echo $order['order_id']; ?>">
+                                        <i class="bi bi-cash"></i> Proses Pembayaran
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
-                                <!-- Payment Modal -->
-                                <div class="modal fade" id="paymentModal<?php echo $order['order_id']; ?>" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Proses Pembayaran</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <form method="POST">
-                                                <div class="modal-body">
-                                                    <input type="hidden" name="action" value="process_payment">
-                                                    <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
-                                                    <input type="hidden" name="total_amount" value="<?php echo $order['total_amount']; ?>">
-                                                    
-                                                    <p><strong>Meja:</strong> <?php echo htmlspecialchars($order['table_number']); ?></p>
-                                                    <p><strong>Total:</strong> Rp <?php echo number_format($order['total_amount'], 0, ',', '.'); ?></p>
-                                                    
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Metode Pembayaran</label>
-                                                        <select class="form-select" name="payment_method" required>
-                                                            <option value="">Pilih metode pembayaran...</option>
-                                                            <option value="cash">Cash</option>
-                                                            <option value="card">Card</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                    <button type="submit" class="btn btn-primary">Proses Pembayaran</button>
-                                                </div>
-                                            </form>
-                                        </div>
+                        <!-- Payment Modal -->
+                        <div class="modal fade" id="paymentModal<?php echo $order['order_id']; ?>" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Proses Pembayaran</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
+                                    <form method="POST">
+                                        <div class="modal-body">
+                                            <input type="hidden" name="action" value="process_payment">
+                                            <input type="hidden" name="order_id"
+                                                value="<?php echo $order['order_id']; ?>">
+                                            <input type="hidden" name="total_amount"
+                                                value="<?php echo $order['total_amount']; ?>">
+
+                                            <p><strong>Meja:</strong>
+                                                <?php echo htmlspecialchars($order['table_number']); ?></p>
+                                            <p><strong>Total:</strong> Rp
+                                                <?php echo number_format($order['total_amount'], 0, ',', '.'); ?></p>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Metode Pembayaran</label>
+                                                <select class="form-select" name="payment_method" required>
+                                                    <option value="">Pilih metode pembayaran...</option>
+                                                    <option value="cash">Cash</option>
+                                                    <option value="card">Card</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn btn-primary">Proses Pembayaran</button>
+                                        </div>
+                                    </form>
                                 </div>
-                            <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -178,25 +189,28 @@ $recent_transactions = $stmt->fetchAll();
                     </div>
                     <div class="card-body">
                         <?php if (empty($recent_transactions)): ?>
-                            <p class="text-center text-muted">Belum ada transaksi</p>
+                        <p class="text-center text-muted">Belum ada transaksi</p>
                         <?php else: ?>
-                            <?php foreach ($recent_transactions as $transaction): ?>
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <small>Meja <?php echo htmlspecialchars($transaction['table_number']); ?></small>
-                                            <small class="text-muted">
-                                                <?php echo date('d/m/Y H:i', strtotime($transaction['created_at'])); ?>
-                                            </small>
-                                        </div>
-                                        <p class="mb-1"><small><?php echo htmlspecialchars($transaction['items']); ?></small></p>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="badge bg-success"><?php echo strtoupper($transaction['payment_method']); ?></span>
-                                            <strong>Rp <?php echo number_format($transaction['total_amount'], 0, ',', '.'); ?></strong>
-                                        </div>
-                                    </div>
+                        <?php foreach ($recent_transactions as $transaction): ?>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small>Meja <?php echo htmlspecialchars($transaction['table_number']); ?></small>
+                                    <small class="text-muted">
+                                        <?php echo date('d/m/Y H:i', strtotime($transaction['created_at'])); ?>
+                                    </small>
                                 </div>
-                            <?php endforeach; ?>
+                                <p class="mb-1"><small><?php echo htmlspecialchars($transaction['items']); ?></small>
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span
+                                        class="badge bg-success"><?php echo strtoupper($transaction['payment_method']); ?></span>
+                                    <strong>Rp
+                                        <?php echo number_format($transaction['total_amount'], 0, ',', '.'); ?></strong>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -206,4 +220,5 @@ $recent_transactions = $stmt->fetchAll();
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html> 
+
+</html>

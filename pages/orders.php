@@ -9,6 +9,10 @@ require_once $root_path . 'auth/auth.php';
 // Check if user has waiter role
 checkRole(['waiter']);
 
+// Initialize message variables
+$message = '';
+$messageType = '';
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -143,54 +147,78 @@ $active_orders = $stmt->fetchAll();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
-<body>
+<body class="bg-light">
     <?php include '../components/navbar.php'; ?>
 
-    <div class="container mt-4">
+    <div class="container py-4">
+        <?php if ($message): ?>
+        <div class="alert alert-<?php echo $messageType; ?> alert-dismissible fade show shadow-sm" role="alert">
+            <?php echo $message; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <?php endif; ?>
+
         <div class="row">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Order Aktif</h5>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#addOrderModal">
-                            <i class="bi bi-plus"></i> Order Baru
-                        </button>
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1">Order Aktif</h5>
+                                <p class="text-muted mb-0">Kelola order yang sedang berjalan</p>
+                            </div>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#addOrderModal">
+                                <i class="bi bi-plus-lg me-2"></i>Order Baru
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <?php if (empty($active_orders)): ?>
-                        <p class="text-center text-muted">Tidak ada order aktif</p>
+                        <div class="text-center py-5">
+                            <i class="bi bi-cart text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-3">Tidak ada order aktif</p>
+                        </div>
                         <?php else: ?>
                         <?php foreach ($active_orders as $order): ?>
-                        <div class="card mb-3">
+                        <div class="card mb-3 border-0 shadow-sm">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="card-title mb-0">
-                                        Meja <?php echo htmlspecialchars($order['table_number']); ?>
-                                    </h6>
-                                    <small class="text-muted">
-                                        <?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?>
-                                    </small>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h6 class="card-title mb-1">
+                                            <i class="bi bi-table me-2 text-primary"></i>
+                                            Meja <?php echo htmlspecialchars($order['table_number']); ?>
+                                        </h6>
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock me-1"></i>
+                                            <?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?>
+                                        </small>
+                                    </div>
+                                    <div class="btn-group">
+                                        <form method="POST" class="me-2">
+                                            <input type="hidden" name="action" value="complete">
+                                            <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
+                                            <input type="hidden" name="table_id"
+                                                value="<?php echo $order['table_id']; ?>">
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="bi bi-check-circle me-1"></i>Selesai
+                                            </button>
+                                        </form>
+                                        <form method="POST">
+                                            <input type="hidden" name="action" value="cancel">
+                                            <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
+                                            <input type="hidden" name="table_id"
+                                                value="<?php echo $order['table_id']; ?>">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="bi bi-x-circle me-1"></i>Batal
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
-                                <p class="card-text"><?php echo htmlspecialchars($order['items']); ?></p>
-                                <div class="btn-group">
-                                    <form method="POST" class="me-2">
-                                        <input type="hidden" name="action" value="complete">
-                                        <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
-                                        <input type="hidden" name="table_id" value="<?php echo $order['table_id']; ?>">
-                                        <button type="submit" class="btn btn-success btn-sm">
-                                            <i class="bi bi-check-circle"></i> Selesai
-                                        </button>
-                                    </form>
-                                    <form method="POST">
-                                        <input type="hidden" name="action" value="cancel">
-                                        <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
-                                        <input type="hidden" name="table_id" value="<?php echo $order['table_id']; ?>">
-                                        <button type="submit" class="btn btn-danger btn-sm">
-                                            <i class="bi bi-x-circle"></i> Batal
-                                        </button>
-                                    </form>
-                                </div>
+                                <p class="card-text mb-0">
+                                    <i class="bi bi-list-ul me-2 text-muted"></i>
+                                    <?php echo htmlspecialchars($order['items']); ?>
+                                </p>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -213,7 +241,7 @@ $active_orders = $stmt->fetchAll();
                     <div class="modal-body">
                         <input type="hidden" name="action" value="add">
 
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label class="form-label">Pilih Meja</label>
                             <select class="form-select" name="table_id" required>
                                 <option value="">Pilih Meja...</option>
@@ -229,7 +257,7 @@ $active_orders = $stmt->fetchAll();
                             <label class="form-label">Pilih Produk</label>
                             <div class="table-responsive">
                                 <table class="table table-bordered">
-                                    <thead>
+                                    <thead class="bg-light">
                                         <tr>
                                             <th>Produk</th>
                                             <th>Harga</th>
@@ -240,9 +268,19 @@ $active_orders = $stmt->fetchAll();
                                     <tbody>
                                         <?php foreach ($products as $product): ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($product['name']); ?></td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-box me-2 text-primary"></i>
+                                                    <?php echo htmlspecialchars($product['name']); ?>
+                                                </div>
+                                            </td>
                                             <td>Rp <?php echo number_format($product['price'], 0, ',', '.'); ?></td>
-                                            <td><?php echo $product['stock']; ?></td>
+                                            <td>
+                                                <span
+                                                    class="badge <?php echo $product['stock'] > 0 ? 'bg-success' : 'bg-danger'; ?> rounded-pill">
+                                                    <?php echo $product['stock']; ?>
+                                                </span>
+                                            </td>
                                             <td>
                                                 <input type="hidden" name="products[]"
                                                     value="<?php echo $product['id']; ?>">
@@ -257,7 +295,7 @@ $active_orders = $stmt->fetchAll();
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-primary">Simpan</button>
                     </div>
                 </form>
