@@ -6,8 +6,8 @@ if (session_status() === PHP_SESSION_NONE) {
 $root_path = $_SERVER['DOCUMENT_ROOT'] . '/kasirdoy/';
 require_once $root_path . 'auth/auth.php';
 
-// Check if user has waiter role
-checkRole(['waiter']);
+// Check if user has appropriate role
+checkRole(['administrator', 'waiter']);
 
 // Initialize message variables
 $message = '';

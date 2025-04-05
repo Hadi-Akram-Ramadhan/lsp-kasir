@@ -7,7 +7,8 @@ try {
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
-        role ENUM('administrator', 'waiter', 'kasir', 'owner') NOT NULL,
+        role ENUM('administrator', 'kasir', 'waiter', 'owner') NOT NULL,
+        name VARCHAR(100) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )";
     $conn->exec($sql);
@@ -15,7 +16,7 @@ try {
     // Create tables table
     $sql = "CREATE TABLE IF NOT EXISTS tables (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        table_number VARCHAR(10) NOT NULL,
+        table_number VARCHAR(10) UNIQUE NOT NULL,
         status ENUM('available', 'occupied') DEFAULT 'available',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )";
@@ -24,9 +25,10 @@ try {
     // Create products table
     $sql = "CREATE TABLE IF NOT EXISTS products (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
+        name VARCHAR(100) UNIQUE NOT NULL,
         price DECIMAL(10,2) NOT NULL,
         stock INT NOT NULL DEFAULT 0,
+        stock_minimum INT NOT NULL DEFAULT 5,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )";
     $conn->exec($sql);
@@ -34,8 +36,8 @@ try {
     // Create orders table
     $sql = "CREATE TABLE IF NOT EXISTS orders (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        table_id INT,
-        waiter_id INT,
+        table_id INT NOT NULL,
+        waiter_id INT NOT NULL,
         status ENUM('pending', 'completed', 'cancelled') DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (table_id) REFERENCES tables(id),
@@ -46,11 +48,10 @@ try {
     // Create order_items table
     $sql = "CREATE TABLE IF NOT EXISTS order_items (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        order_id INT,
-        product_id INT,
+        order_id INT NOT NULL,
+        product_id INT NOT NULL,
         quantity INT NOT NULL,
         price DECIMAL(10,2) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (order_id) REFERENCES orders(id),
         FOREIGN KEY (product_id) REFERENCES products(id)
     )";
@@ -59,32 +60,79 @@ try {
     // Create transactions table
     $sql = "CREATE TABLE IF NOT EXISTS transactions (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        order_id INT,
-        cashier_id INT,
+        order_id INT NOT NULL,
         total_amount DECIMAL(10,2) NOT NULL,
-        payment_method ENUM('cash', 'card') NOT NULL,
+        payment_method ENUM('cash', 'card', 'qris') NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (order_id) REFERENCES orders(id),
-        FOREIGN KEY (cashier_id) REFERENCES users(id)
+        FOREIGN KEY (order_id) REFERENCES orders(id)
     )";
     $conn->exec($sql);
 
+    // New tables for additional features
+    $conn->exec("
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            type ENUM('order', 'stock', 'system') NOT NULL,
+            message TEXT NOT NULL,
+            is_read BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ");
+
+    $conn->exec("
+        CREATE TABLE IF NOT EXISTS activity_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            action VARCHAR(50) NOT NULL,
+            description TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ");
+
+    $conn->exec("
+        CREATE TABLE IF NOT EXISTS cashier_shifts (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            start_time TIMESTAMP NOT NULL,
+            end_time TIMESTAMP NULL,
+            total_transactions INT DEFAULT 0,
+            total_amount DECIMAL(10,2) DEFAULT 0,
+            status ENUM('active', 'closed') DEFAULT 'active',
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ");
+
+    $conn->exec("
+        CREATE TABLE IF NOT EXISTS table_reservations (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            table_id INT NOT NULL,
+            customer_name VARCHAR(100) NOT NULL,
+            customer_phone VARCHAR(20) NOT NULL,
+            reservation_time TIMESTAMP NOT NULL,
+            party_size INT NOT NULL,
+            status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (table_id) REFERENCES tables(id)
+        )
+    ");
+
     // Insert default users
     $users = [
-        ['username' => 'admin', 'password' => 'admin123', 'role' => 'administrator'],
-        ['username' => 'kasir', 'password' => 'kasir123', 'role' => 'kasir'],
-        ['username' => 'owner', 'password' => 'owner123', 'role' => 'owner'],
-        ['username' => 'waiter1', 'password' => 'waiter123', 'role' => 'waiter'],
-        ['username' => 'waiter2', 'password' => 'waiter123', 'role' => 'waiter']
+        ['admin', password_hash('admin123', PASSWORD_DEFAULT), 'administrator', 'Administrator'],
+        ['kasir', password_hash('kasir123', PASSWORD_DEFAULT), 'kasir', 'Kasir'],
+        ['owner', password_hash('owner123', PASSWORD_DEFAULT), 'owner', 'Owner'],
+        ['waiter1', password_hash('waiter123', PASSWORD_DEFAULT), 'waiter', 'Waiter 1'],
+        ['waiter2', password_hash('waiter123', PASSWORD_DEFAULT), 'waiter', 'Waiter 2']
     ];
 
     foreach ($users as $user) {
-        $sql = "INSERT INTO users (username, password, role) 
-                SELECT ?, ?, ?
-                WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = ?)";
-        $stmt = $conn->prepare($sql);
-        $hashedPassword = password_hash($user['password'], PASSWORD_DEFAULT);
-        $stmt->execute([$user['username'], $hashedPassword, $user['role'], $user['username']]);
+        $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
+        $stmt->execute([$user[0]]);
+        if (!$stmt->fetch()) {
+            $stmt = $conn->prepare("INSERT INTO users (username, password, role, name) VALUES (?, ?, ?, ?)");
+            $stmt->execute($user);
+        }
     }
 
     // Insert dummy tables
@@ -164,8 +212,8 @@ try {
             }
 
             // Create transaction
-            $stmt = $conn->prepare("INSERT INTO transactions (order_id, cashier_id, total_amount, payment_method) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$orderId, $cashierId, $totalAmount, rand(0, 1) ? 'cash' : 'card']);
+            $stmt = $conn->prepare("INSERT INTO transactions (order_id, total_amount, payment_method) VALUES (?, ?, ?)");
+            $stmt->execute([$orderId, $totalAmount, rand(0, 2) ? 'cash' : (rand(0, 1) ? 'card' : 'qris')]);
 
             $conn->commit();
         } catch (Exception $e) {
@@ -209,6 +257,109 @@ try {
         } catch (Exception $e) {
             $conn->rollBack();
             throw $e;
+        }
+    }
+
+    // Insert dummy notifications
+    $notificationTypes = ['order', 'stock', 'system'];
+    $notificationMessages = [
+        'order' => [
+            'Pesanan baru dari Meja A1',
+            'Pesanan dari Meja B2 telah selesai',
+            'Pesanan dari Meja C3 dibatalkan'
+        ],
+        'stock' => [
+            'Stok Nasi Goreng hampir habis',
+            'Stok Ayam Bakar perlu ditambah',
+            'Stok Es Teh sudah diisi ulang'
+        ],
+        'system' => [
+            'Backup database berhasil',
+            'Update sistem selesai',
+            'Maintenance terjadwal besok'
+        ]
+    ];
+
+    foreach ($notificationTypes as $type) {
+        foreach ($notificationMessages[$type] as $message) {
+            $stmt = $conn->prepare("INSERT INTO notifications (type, message, is_read) VALUES (?, ?, ?)");
+            $stmt->execute([$type, $message, rand(0, 1)]);
+        }
+    }
+
+    // Insert dummy activity logs
+    $actions = ['login', 'logout', 'create', 'update', 'delete'];
+    $descriptions = [
+        'login' => 'User login ke sistem',
+        'logout' => 'User logout dari sistem',
+        'create' => 'Membuat data baru',
+        'update' => 'Mengubah data',
+        'delete' => 'Menghapus data'
+    ];
+
+    // Get all user IDs
+    $stmt = $conn->query("SELECT id FROM users");
+    
+    $userIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    foreach ($userIds as $userId) {
+        // Create 3-5 activity logs per user
+        $numLogs = rand(3, 5);
+        for ($i = 0; $i < $numLogs; $i++) {
+            $action = $actions[array_rand($actions)];
+            $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, action, description) VALUES (?, ?, ?)");
+            $stmt->execute([$userId, $action, $descriptions[$action]]);
+        }
+    }
+
+    // Insert dummy cashier shifts
+    // Get cashier IDs
+    $stmt = $conn->query("SELECT id FROM users WHERE role = 'kasir'");
+    $cashierIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    foreach ($cashierIds as $cashierId) {
+        // Create 2-3 shifts per cashier
+        $numShifts = rand(2, 3);
+        for ($i = 0; $i < $numShifts; $i++) {
+            $startTime = date('Y-m-d H:i:s', strtotime("-" . rand(1, 7) . " days"));
+            $endTime = date('Y-m-d H:i:s', strtotime($startTime . " +" . rand(4, 8) . " hours"));
+            $totalTransactions = rand(5, 20);
+            $totalAmount = $totalTransactions * rand(50000, 200000);
+            
+            $stmt = $conn->prepare("INSERT INTO cashier_shifts (user_id, start_time, end_time, total_transactions, total_amount, status) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$cashierId, $startTime, $endTime, $totalTransactions, $totalAmount, 'closed']);
+        }
+        
+        // Create one active shift
+        $startTime = date('Y-m-d H:i:s', strtotime("-" . rand(1, 3) . " hours"));
+        $totalTransactions = rand(1, 10);
+        $totalAmount = $totalTransactions * rand(20000, 100000);
+        
+        $stmt = $conn->prepare("INSERT INTO cashier_shifts (user_id, start_time, total_transactions, total_amount, status) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$cashierId, $startTime, $totalTransactions, $totalAmount, 'active']);
+    }
+
+    // Insert dummy table reservations
+    // Get table IDs
+    $stmt = $conn->query("SELECT id FROM tables");
+    $tableIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    $customerNames = ['Budi Santoso', 'Siti Rahayu', 'Ahmad Hidayat', 'Dewi Kusuma', 'Rudi Hartono'];
+    $customerPhones = ['081234567890', '082345678901', '083456789012', '084567890123', '085678901234'];
+    $reservationStatuses = ['pending', 'confirmed', 'cancelled'];
+    
+    foreach ($tableIds as $tableId) {
+        // Create 1-2 reservations per table
+        $numReservations = rand(1, 2);
+        for ($i = 0; $i < $numReservations; $i++) {
+            $customerName = $customerNames[array_rand($customerNames)];
+            $customerPhone = $customerPhones[array_rand($customerPhones)];
+            $reservationTime = date('Y-m-d H:i:s', strtotime("+" . rand(1, 7) . " days"));
+            $partySize = rand(2, 8);
+            $status = $reservationStatuses[array_rand($reservationStatuses)];
+            
+            $stmt = $conn->prepare("INSERT INTO table_reservations (table_id, customer_name, customer_phone, reservation_time, party_size, status) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$tableId, $customerName, $customerPhone, $reservationTime, $partySize, $status]);
         }
     }
 
