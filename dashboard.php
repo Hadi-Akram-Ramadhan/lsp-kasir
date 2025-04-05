@@ -76,6 +76,7 @@ $unread_notifications = $stmt->fetchColumn();
 
         <div class="row mb-4">
             <!-- Quick Stats -->
+            <?php if (in_array($user_role, ['administrator', 'waiter'])): ?>
             <div class="col-md-3 mb-3">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
@@ -91,7 +92,9 @@ $unread_notifications = $stmt->fetchColumn();
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
+            <?php if (in_array($user_role, ['administrator', 'waiter'])): ?>
             <div class="col-md-3 mb-3">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
@@ -107,7 +110,9 @@ $unread_notifications = $stmt->fetchColumn();
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
+            <?php if (in_array($user_role, ['administrator', 'waiter'])): ?>
             <div class="col-md-3 mb-3">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
@@ -123,6 +128,7 @@ $unread_notifications = $stmt->fetchColumn();
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
             <div class="col-md-3 mb-3">
                 <div class="card shadow-sm h-100">
@@ -153,7 +159,7 @@ $unread_notifications = $stmt->fetchColumn();
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <a href="/kasirdoy/pages/users.php" class="text-decoration-none">
+                                <a href="pages/users.php" class="text-decoration-none">
                                     <div class="card h-100 border-0 shadow-sm">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center">
@@ -170,17 +176,33 @@ $unread_notifications = $stmt->fetchColumn();
                                 </a>
                             </div>
                             <div class="col-md-6">
-                                <a href="/kasirdoy/pages/reports.php" class="text-decoration-none">
+                                <a href="pages/tables.php" class="text-decoration-none">
                                     <div class="card h-100 border-0 shadow-sm">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center">
-                                                <div class="bg-success bg-opacity-10 p-3 rounded me-3">
-                                                    <i class="bi bi-file-earmark-text text-success"
-                                                        style="font-size: 1.5rem;"></i>
+                                                <div class="bg-info bg-opacity-10 p-3 rounded me-3">
+                                                    <i class="bi bi-table text-info" style="font-size: 1.5rem;"></i>
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-1">Laporan</h6>
-                                                    <p class="text-muted small mb-0">Lihat laporan sistem</p>
+                                                    <h6 class="mb-1">Entri Meja</h6>
+                                                    <p class="text-muted small mb-0">Kelola data meja</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="pages/products.php" class="text-decoration-none">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-warning bg-opacity-10 p-3 rounded me-3">
+                                                    <i class="bi bi-box text-warning" style="font-size: 1.5rem;"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1">Entri Barang</h6>
+                                                    <p class="text-muted small mb-0">Kelola data produk</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -192,7 +214,7 @@ $unread_notifications = $stmt->fetchColumn();
                 </div>
                 <?php endif; ?>
 
-                <?php if (in_array($user_role, ['administrator', 'waiter'])): ?>
+                <?php if ($user_role === 'waiter'): ?>
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-white py-3">
                         <h5 class="card-title mb-0">Menu Waiter</h5>
@@ -200,16 +222,16 @@ $unread_notifications = $stmt->fetchColumn();
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <a href="/kasirdoy/pages/orders.php" class="text-decoration-none">
+                                <a href="pages/products.php" class="text-decoration-none">
                                     <div class="card h-100 border-0 shadow-sm">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center">
-                                                <div class="bg-primary bg-opacity-10 p-3 rounded me-3">
-                                                    <i class="bi bi-cart text-primary" style="font-size: 1.5rem;"></i>
+                                                <div class="bg-warning bg-opacity-10 p-3 rounded me-3">
+                                                    <i class="bi bi-box text-warning" style="font-size: 1.5rem;"></i>
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-1">Pesanan</h6>
-                                                    <p class="text-muted small mb-0">Kelola pesanan pelanggan</p>
+                                                    <h6 class="mb-1">Entri Barang</h6>
+                                                    <p class="text-muted small mb-0">Kelola data produk</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -217,17 +239,34 @@ $unread_notifications = $stmt->fetchColumn();
                                 </a>
                             </div>
                             <div class="col-md-6">
-                                <a href="/kasirdoy/pages/reservations.php" class="text-decoration-none">
+                                <a href="pages/orders.php" class="text-decoration-none">
                                     <div class="card h-100 border-0 shadow-sm">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-success bg-opacity-10 p-3 rounded me-3">
-                                                    <i class="bi bi-calendar-check text-success"
+                                                    <i class="bi bi-cart text-success" style="font-size: 1.5rem;"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1">Entri Order</h6>
+                                                    <p class="text-muted small mb-0">Kelola pesanan</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="pages/reports.php" class="text-decoration-none">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary bg-opacity-10 p-3 rounded me-3">
+                                                    <i class="bi bi-file-text text-primary"
                                                         style="font-size: 1.5rem;"></i>
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-1">Reservasi</h6>
-                                                    <p class="text-muted small mb-0">Kelola reservasi meja</p>
+                                                    <h6 class="mb-1">Generate Laporan</h6>
+                                                    <p class="text-muted small mb-0">Lihat laporan</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -247,17 +286,16 @@ $unread_notifications = $stmt->fetchColumn();
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <a href="/kasirdoy/pages/transactions.php" class="text-decoration-none">
+                                <a href="pages/transactions.php" class="text-decoration-none">
                                     <div class="card h-100 border-0 shadow-sm">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center">
-                                                <div class="bg-primary bg-opacity-10 p-3 rounded me-3">
-                                                    <i class="bi bi-cash-stack text-primary"
-                                                        style="font-size: 1.5rem;"></i>
+                                                <div class="bg-success bg-opacity-10 p-3 rounded me-3">
+                                                    <i class="bi bi-cash text-success" style="font-size: 1.5rem;"></i>
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-1">Transaksi</h6>
-                                                    <p class="text-muted small mb-0">Proses pembayaran</p>
+                                                    <h6 class="mb-1">Entri Transaksi</h6>
+                                                    <p class="text-muted small mb-0">Kelola transaksi</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -265,17 +303,47 @@ $unread_notifications = $stmt->fetchColumn();
                                 </a>
                             </div>
                             <div class="col-md-6">
-                                <a href="/kasirdoy/pages/shifts.php" class="text-decoration-none">
+                                <a href="pages/reports.php" class="text-decoration-none">
                                     <div class="card h-100 border-0 shadow-sm">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center">
-                                                <div class="bg-success bg-opacity-10 p-3 rounded me-3">
-                                                    <i class="bi bi-clock-history text-success"
+                                                <div class="bg-primary bg-opacity-10 p-3 rounded me-3">
+                                                    <i class="bi bi-file-text text-primary"
                                                         style="font-size: 1.5rem;"></i>
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-1">Shift</h6>
-                                                    <p class="text-muted small mb-0">Kelola shift kasir</p>
+                                                    <h6 class="mb-1">Generate Laporan</h6>
+                                                    <p class="text-muted small mb-0">Lihat laporan</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <?php if ($user_role === 'owner'): ?>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title mb-0">Menu Owner</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <a href="pages/reports.php" class="text-decoration-none">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary bg-opacity-10 p-3 rounded me-3">
+                                                    <i class="bi bi-file-text text-primary"
+                                                        style="font-size: 1.5rem;"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1">Generate Laporan</h6>
+                                                    <p class="text-muted small mb-0">Lihat laporan</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -290,32 +358,84 @@ $unread_notifications = $stmt->fetchColumn();
                 <!-- Activity Logs -->
                 <div class="card shadow-sm">
                     <div class="card-header bg-white py-3">
-                        <h5 class="card-title mb-0">Aktivitas Terbaru</h5>
+                        <h5 class="card-title mb-0">Aktivitas Terakhir</h5>
                     </div>
                     <div class="card-body">
-                        <?php if (empty($activity_logs)): ?>
-                        <div class="text-center py-4">
-                            <i class="bi bi-activity text-muted" style="font-size: 2rem;"></i>
-                            <p class="text-muted mt-2">Belum ada aktivitas</p>
-                        </div>
-                        <?php else: ?>
-                        <div class="list-group list-group-flush">
+                        <div class="activity-list">
                             <?php foreach ($activity_logs as $log): ?>
-                            <div class="list-group-item px-0">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-light p-2 rounded me-3">
-                                        <i class="bi bi-person text-primary"></i>
-                                    </div>
-                                    <div>
-                                        <p class="mb-1">
-                                            <span
-                                                class="fw-bold"><?php echo htmlspecialchars($log['username']); ?></span>
-                                            <?php echo htmlspecialchars($log['description']); ?>
-                                        </p>
-                                        <small class="text-muted">
+                            <div class="activity-item d-flex align-items-start mb-3">
+                                <div class="activity-content flex-grow-1">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="bi bi-person-circle me-2 text-primary"></i>
+                                        <span class="fw-bold"><?php echo htmlspecialchars($log['username']); ?></span>
+                                        <small class="text-muted ms-2">
                                             <?php echo date('d/m/Y H:i', strtotime($log['created_at'])); ?>
                                         </small>
                                     </div>
+                                    <p class="mb-0"><?php echo htmlspecialchars($log['description']); ?></p>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-4">
+                <?php if ($user_role === 'kasir'): ?>
+                <!-- Active Shift Status -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title mb-0">Status Shift</h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if ($active_shift): ?>
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Shift aktif sejak <?php echo date('H:i', strtotime($active_shift['start_time'])); ?>
+                        </div>
+                        <?php else: ?>
+                        <div class="alert alert-warning mb-0">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            Tidak ada shift aktif
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <?php if (in_array($user_role, ['administrator', 'waiter'])): ?>
+                <!-- Today's Reservations -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Reservasi Hari Ini</h5>
+                        <span class="badge bg-primary rounded-pill">
+                            <?php echo count($today_reservations); ?>
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <?php if (empty($today_reservations)): ?>
+                        <p class="text-muted mb-0">Tidak ada reservasi hari ini</p>
+                        <?php else: ?>
+                        <div class="reservation-list">
+                            <?php foreach ($today_reservations as $reservation): ?>
+                            <div class="reservation-item mb-3">
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="bi bi-person me-2"></i>
+                                    <strong><?php echo htmlspecialchars($reservation['customer_name']); ?></strong>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock me-1"></i>
+                                        <?php echo date('H:i', strtotime($reservation['reservation_time'])); ?>
+                                    </small>
+                                    <span class="badge bg-<?php
+                                        echo $reservation['status'] === 'confirmed' ? 'success' :
+                                            ($reservation['status'] === 'pending' ? 'warning' : 'danger');
+                                    ?> rounded-pill">
+                                        <?php echo ucfirst($reservation['status']); ?>
+                                    </span>
                                 </div>
                             </div>
                             <?php endforeach; ?>
@@ -323,106 +443,7 @@ $unread_notifications = $stmt->fetchColumn();
                         <?php endif; ?>
                     </div>
                 </div>
-            </div>
-
-            <!-- Sidebar -->
-            <div class="col-md-4">
-                <!-- Cashier Shift Status -->
-                <?php if ($user_role === 'kasir' && $active_shift): ?>
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="card-title mb-0">Status Shift</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-success bg-opacity-10 p-3 rounded me-3">
-                                <i class="bi bi-clock text-success" style="font-size: 1.5rem;"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-1">Shift Aktif</h6>
-                                <p class="text-muted small mb-0">
-                                    Mulai: <?php echo date('H:i', strtotime($active_shift['start_time'])); ?>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Total Transaksi:</span>
-                            <span class="fw-bold"><?php echo $active_shift['total_transactions']; ?></span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span>Total Penjualan:</span>
-                            <span class="fw-bold">Rp
-                                <?php echo number_format($active_shift['total_amount'], 0, ',', '.'); ?></span>
-                        </div>
-                        <div class="mt-3">
-                            <a href="/kasirdoy/pages/shifts.php" class="btn btn-outline-primary btn-sm w-100">
-                                <i class="bi bi-clock-history me-1"></i>Lihat Detail Shift
-                            </a>
-                        </div>
-                    </div>
-                </div>
                 <?php endif; ?>
-
-                <!-- Today's Reservations -->
-                <?php if (!empty($today_reservations)): ?>
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="card-title mb-0">Reservasi Hari Ini</h5>
-                    </div>
-                    <div class="card-body">
-                        <?php foreach ($today_reservations as $reservation): ?>
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
-                                <i class="bi bi-calendar-check text-primary"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1">Meja <?php echo htmlspecialchars($reservation['table_number']); ?></h6>
-                                <p class="text-muted small mb-0">
-                                    <?php echo htmlspecialchars($reservation['customer_name']); ?> •
-                                    <?php echo date('H:i', strtotime($reservation['reservation_time'])); ?>
-                                </p>
-                            </div>
-                            <span class="badge bg-<?php 
-                                echo $reservation['status'] === 'confirmed' ? 'success' : 
-                                    ($reservation['status'] === 'pending' ? 'warning' : 'danger'); 
-                            ?> rounded-pill">
-                                <?php echo ucfirst($reservation['status']); ?>
-                            </span>
-                        </div>
-                        <?php endforeach; ?>
-                        <div class="mt-3">
-                            <a href="/kasirdoy/pages/reservations.php" class="btn btn-outline-primary btn-sm w-100">
-                                <i class="bi bi-calendar-check me-1"></i>Lihat Semua Reservasi
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <!-- Notifications -->
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="card-title mb-0">Notifikasi</h5>
-                    </div>
-                    <div class="card-body">
-                        <?php if ($unread_notifications > 0): ?>
-                        <div class="alert alert-info">
-                            <i class="bi bi-bell me-2"></i>
-                            Anda memiliki <?php echo $unread_notifications; ?> notifikasi baru
-                        </div>
-                        <div class="mt-3">
-                            <a href="/kasirdoy/pages/notifications.php" class="btn btn-outline-primary btn-sm w-100">
-                                <i class="bi bi-bell me-1"></i>Lihat Notifikasi
-                            </a>
-                        </div>
-                        <?php else: ?>
-                        <div class="text-center py-4">
-                            <i class="bi bi-bell text-muted" style="font-size: 2rem;"></i>
-                            <p class="text-muted mt-2">Tidak ada notifikasi baru</p>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

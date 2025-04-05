@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $root_path = $_SERVER['DOCUMENT_ROOT'] . '/kasirdoy/';
 require_once $root_path . 'auth/auth.php';
+require_once $root_path . 'helpers/activity_log.php';
 
 // Check if user has administrator or waiter role
 checkRole(['administrator', 'waiter']);
@@ -31,6 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
                         $stmt = $conn->prepare("INSERT INTO products (name, price, stock) VALUES (?, ?, ?)");
                         $stmt->execute([$name, $price, $stock]);
+                        
+                        // Log activity
+                        $price_formatted = number_format($price, 0, ',', '.');
+                        logActivity($conn, $_SESSION['user_id'], 'create', "Menambahkan produk baru: {$name} (Rp {$price_formatted}, Stok: {$stock})");
+                        
                         $message = "Produk berhasil ditambahkan!";
                         $messageType = "success";
                     }
@@ -49,8 +55,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $message = "Produk dengan nama '$name' sudah ada!";
                         $messageType = "danger";
                     } else {
+                        // Get old product data for logging
+                        $stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
+                        $stmt->execute([$id]);
+                        $old_product = $stmt->fetch();
+
                         $stmt = $conn->prepare("UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?");
                         $stmt->execute([$name, $price, $stock, $id]);
+                        
+                        // Log activity
+                        $changes = [];
+                        if ($old_product['name'] !== $name) $changes[] = "nama dari {$old_product['name']} ke {$name}";
+                        if ($old_product['price'] !== $price) {
+                            $old_price = number_format($old_product['price'], 0, ',', '.');
+                            $new_price = number_format($price, 0, ',', '.');
+                            $changes[] = "harga dari Rp {$old_price} ke Rp {$new_price}";
+                        }
+                        if ($old_product['stock'] !== $stock) $changes[] = "stok dari {$old_product['stock']} ke {$stock}";
+                        
+                        if (!empty($changes)) {
+                            logActivity($conn, $_SESSION['user_id'], 'update', "Mengubah produk {$name}: " . implode(', ', $changes));
+                        }
+                        
                         $message = "Produk berhasil diupdate!";
                         $messageType = "success";
                     }
@@ -66,8 +92,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $message = "Produk tidak bisa dihapus karena sudah digunakan dalam order!";
                         $messageType = "danger";
                     } else {
+                        // Get product name for logging
+                        $stmt = $conn->prepare("SELECT name FROM products WHERE id = ?");
+                        $stmt->execute([$id]);
+                        $product_name = $stmt->fetchColumn();
+
                         $stmt = $conn->prepare("DELETE FROM products WHERE id = ?");
                         $stmt->execute([$id]);
+                        
+                        // Log activity
+                        logActivity($conn, $_SESSION['user_id'], 'delete', "Menghapus produk: {$product_name}");
+                        
                         $message = "Produk berhasil dihapus!";
                         $messageType = "success";
                     }

@@ -5,9 +5,30 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $root_path = $_SERVER['DOCUMENT_ROOT'] . '/kasirdoy/';
 require_once $root_path . 'auth/auth.php';
+require_once $root_path . 'helpers/activity_log.php';
 
 // Check if user has cashier role
 checkRole(['kasir']);
+
+// Get pending orders with details
+$stmt = $conn->query("
+    SELECT 
+        o.id as order_id,
+        o.created_at,
+        t.table_number,
+        u.username as waiter_name,
+        SUM(oi.quantity * oi.price) as total_amount,
+        GROUP_CONCAT(CONCAT(p.name, ' (', oi.quantity, ' x ', oi.price, ')') SEPARATOR ', ') as items
+    FROM orders o
+    JOIN tables t ON o.table_id = t.id
+    JOIN users u ON o.waiter_id = u.id
+    JOIN order_items oi ON o.id = oi.order_id
+    JOIN products p ON oi.product_id = p.id
+    WHERE o.status = 'pending'
+    GROUP BY o.id
+    ORDER BY o.created_at DESC
+");
+$pending_orders = $stmt->fetchAll();
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,6 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$order_id]);
 
             $conn->commit();
+
+            // Log activity
+            $table_number = $pending_orders[array_search($order_id, array_column($pending_orders, 'order_id'))]['table_number'];
+            $amount_formatted = number_format($total_amount, 0, ',', '.');
+            logActivity($conn, $_SESSION['user_id'], 'create', "Memproses pembayaran Rp {$amount_formatted} untuk Meja {$table_number} via {$payment_method}");
+
             header('Location: transactions.php');
             exit();
         } catch (Exception $e) {
@@ -41,26 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-
-// Get pending orders with details
-$stmt = $conn->query("
-    SELECT 
-        o.id as order_id,
-        o.created_at,
-        t.table_number,
-        u.username as waiter_name,
-        SUM(oi.quantity * oi.price) as total_amount,
-        GROUP_CONCAT(CONCAT(p.name, ' (', oi.quantity, ' x ', oi.price, ')') SEPARATOR ', ') as items
-    FROM orders o
-    JOIN tables t ON o.table_id = t.id
-    JOIN users u ON o.waiter_id = u.id
-    JOIN order_items oi ON o.id = oi.order_id
-    JOIN products p ON oi.product_id = p.id
-    WHERE o.status = 'pending'
-    GROUP BY o.id
-    ORDER BY o.created_at DESC
-");
-$pending_orders = $stmt->fetchAll();
 
 // Get recent transactions
 $stmt = $conn->prepare("

@@ -13,8 +13,26 @@
  * @return bool Success status
  */
 function createNotification($conn, $type, $message, $link = null) {
-    $stmt = $conn->prepare("INSERT INTO notifications (type, message, link) VALUES (?, ?, ?)");
-    return $stmt->execute([$type, $message, $link]);
+    try {
+        // Check if link column exists
+        $stmt = $conn->query("SHOW COLUMNS FROM notifications LIKE 'link'");
+        $linkColumnExists = $stmt->fetch() !== false;
+
+        if ($linkColumnExists) {
+            $stmt = $conn->prepare("INSERT INTO notifications (type, message, link, created_at) VALUES (?, ?, ?, NOW())");
+            return $stmt->execute([$type, $message, $link]);
+        } else {
+            $stmt = $conn->prepare("INSERT INTO notifications (type, message, created_at) VALUES (?, ?, NOW())");
+            return $stmt->execute([$type, $message]);
+        }
+    } catch (PDOException $e) {
+        // If error is about missing link column, try without it
+        if ($e->getCode() == '42S22') {
+            $stmt = $conn->prepare("INSERT INTO notifications (type, message, created_at) VALUES (?, ?, NOW())");
+            return $stmt->execute([$type, $message]);
+        }
+        throw $e;
+    }
 }
 
 /**

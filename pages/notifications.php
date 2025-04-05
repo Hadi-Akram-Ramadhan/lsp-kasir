@@ -140,7 +140,7 @@ $low_stock_items = checkLowStock($conn);
                                                 <?php echo $item['stock']; ?>
                                             </span>
                                         </td>
-                                        <td><?php echo $item['stock_minimum']; ?></td>
+                                        <td>10</td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>

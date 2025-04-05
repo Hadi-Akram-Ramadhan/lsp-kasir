@@ -5,9 +5,35 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $root_path = $_SERVER['DOCUMENT_ROOT'] . '/kasirdoy/';
 require_once $root_path . 'auth/auth.php';
+require_once $root_path . 'helpers/activity_log.php';
 
 // Check if user has appropriate role
 checkRole(['administrator', 'waiter']);
+
+// Get available tables
+$stmt = $conn->query("SELECT * FROM tables WHERE status = 'available' ORDER BY table_number");
+$available_tables = $stmt->fetchAll();
+
+// Get all products
+$stmt = $conn->query("SELECT * FROM products WHERE stock > 0 ORDER BY name");
+$available_products = $stmt->fetchAll();
+
+// Get active orders for logged in user
+$stmt = $conn->prepare("
+    SELECT 
+        o.*,
+        t.table_number,
+        GROUP_CONCAT(CONCAT(p.name, ' (', oi.quantity, ')') SEPARATOR ', ') as items
+    FROM orders o
+    JOIN tables t ON o.table_id = t.id
+    JOIN order_items oi ON o.id = oi.order_id
+    JOIN products p ON oi.product_id = p.id
+    WHERE o.waiter_id = ? AND o.status = 'pending'
+    GROUP BY o.id
+    ORDER BY o.created_at DESC
+");
+$stmt->execute([$_SESSION['user_id']]);
+$active_orders = $stmt->fetchAll();
 
 // Initialize message variables
 $message = '';
@@ -55,6 +81,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     $conn->commit();
+                    
+                    // Log activity
+                    $table_number = $available_tables[array_search($table_id, array_column($available_tables, 'id'))]['table_number'];
+                    logActivity($conn, $_SESSION['user_id'], 'create', "Membuat order baru untuk Meja $table_number");
+
                 } catch (Exception $e) {
                     $conn->rollBack();
                     throw $e;
@@ -72,6 +103,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update table status
                 $stmt = $conn->prepare("UPDATE tables SET status = 'available' WHERE id = ?");
                 $stmt->execute([$table_id]);
+
+                // Log activity
+                $table_number = $available_tables[array_search($table_id, array_column($available_tables, 'id'))]['table_number'];
+                logActivity($conn, $_SESSION['user_id'], 'update', "Menyelesaikan order untuk Meja $table_number");
                 break;
 
             case 'cancel':
@@ -101,6 +136,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute([$table_id]);
 
                     $conn->commit();
+
+                    // Log activity
+                    $table_number = $available_tables[array_search($table_id, array_column($available_tables, 'id'))]['table_number'];
+                    logActivity($conn, $_SESSION['user_id'], 'update', "Membatalkan order untuk Meja $table_number");
+
                 } catch (Exception $e) {
                     $conn->rollBack();
                     throw $e;
@@ -111,29 +151,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 }
-
-// Get available tables
-$stmt = $conn->query("SELECT * FROM tables WHERE status = 'available' ORDER BY table_number");
-$available_tables = $stmt->fetchAll();
-
-// Get products
-$stmt = $conn->query("SELECT * FROM products WHERE stock > 0 ORDER BY name");
-$products = $stmt->fetchAll();
-
-// Get active orders
-$stmt = $conn->prepare("
-    SELECT o.*, t.table_number, 
-           GROUP_CONCAT(CONCAT(p.name, ' (', oi.quantity, ')') SEPARATOR ', ') as items
-    FROM orders o
-    JOIN tables t ON o.table_id = t.id
-    LEFT JOIN order_items oi ON o.id = oi.order_id
-    LEFT JOIN products p ON oi.product_id = p.id
-    WHERE o.waiter_id = ? AND o.status = 'pending'
-    GROUP BY o.id
-    ORDER BY o.created_at DESC
-");
-$stmt->execute([$_SESSION['user_id']]);
-$active_orders = $stmt->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -266,7 +283,7 @@ $active_orders = $stmt->fetchAll();
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($products as $product): ?>
+                                        <?php foreach ($available_products as $product): ?>
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
