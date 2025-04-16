@@ -10,8 +10,17 @@ require_once $root_path . 'helpers/activity_log.php';
 // Check if user has administrator or waiter role
 checkRole(['administrator', 'waiter']);
 
+// Initialize message variables
 $message = '';
 $messageType = '';
+
+// Get message from session if exists
+if (isset($_SESSION['message'])) {
+    $message = $_SESSION['message'];
+    $messageType = $_SESSION['message_type'];
+    unset($_SESSION['message']);
+    unset($_SESSION['message_type']);
+}
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -27,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $conn->prepare("SELECT COUNT(*) FROM products WHERE name = ?");
                     $stmt->execute([$name]);
                     if ($stmt->fetchColumn() > 0) {
-                        $message = "Produk dengan nama '$name' sudah ada!";
-                        $messageType = "warning";
+                        $_SESSION['message'] = "Produk dengan nama '$name' sudah ada!";
+                        $_SESSION['message_type'] = "warning";
                     } else {
                         $stmt = $conn->prepare("INSERT INTO products (name, price, stock) VALUES (?, ?, ?)");
                         $stmt->execute([$name, $price, $stock]);
@@ -37,8 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $price_formatted = number_format($price, 0, ',', '.');
                         logActivity($conn, $_SESSION['user_id'], 'create', "Menambahkan produk baru: {$name} (Rp {$price_formatted}, Stok: {$stock})");
                         
-                        $message = "Produk berhasil ditambahkan!";
-                        $messageType = "success";
+                        $_SESSION['message'] = "Produk berhasil ditambahkan!";
+                        $_SESSION['message_type'] = "success";
                     }
                     break;
 
@@ -52,8 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $conn->prepare("SELECT COUNT(*) FROM products WHERE name = ? AND id != ?");
                     $stmt->execute([$name, $id]);
                     if ($stmt->fetchColumn() > 0) {
-                        $message = "Produk dengan nama '$name' sudah ada!";
-                        $messageType = "danger";
+                        $_SESSION['message'] = "Produk dengan nama '$name' sudah ada!";
+                        $_SESSION['message_type'] = "danger";
                     } else {
                         // Get old product data for logging
                         $stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
@@ -77,8 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             logActivity($conn, $_SESSION['user_id'], 'update', "Mengubah produk {$name}: " . implode(', ', $changes));
                         }
                         
-                        $message = "Produk berhasil diupdate!";
-                        $messageType = "success";
+                        $_SESSION['message'] = "Produk berhasil diupdate!";
+                        $_SESSION['message_type'] = "success";
                     }
                     break;
 
@@ -89,8 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $conn->prepare("SELECT COUNT(*) FROM order_items WHERE product_id = ?");
                     $stmt->execute([$id]);
                     if ($stmt->fetchColumn() > 0) {
-                        $message = "Produk tidak bisa dihapus karena sudah digunakan dalam order!";
-                        $messageType = "danger";
+                        $_SESSION['message'] = "Produk tidak bisa dihapus karena sudah digunakan dalam order!";
+                        $_SESSION['message_type'] = "danger";
                     } else {
                         // Get product name for logging
                         $stmt = $conn->prepare("SELECT name FROM products WHERE id = ?");
@@ -103,14 +112,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Log activity
                         logActivity($conn, $_SESSION['user_id'], 'delete', "Menghapus produk: {$product_name}");
                         
-                        $message = "Produk berhasil dihapus!";
-                        $messageType = "success";
+                        $_SESSION['message'] = "Produk berhasil dihapus!";
+                        $_SESSION['message_type'] = "success";
                     }
                     break;
             }
         } catch (Exception $e) {
-            $message = "Terjadi kesalahan: " . $e->getMessage();
-            $messageType = "danger";
+            $_SESSION['message'] = "Terjadi kesalahan: " . $e->getMessage();
+            $_SESSION['message_type'] = "danger";
         }
         header('Location: products.php');
         exit();
@@ -140,7 +149,7 @@ $products = $stmt->fetchAll();
         <?php if ($message): ?>
         <div class="alert alert-<?php echo $messageType; ?> alert-dismissible fade show" role="alert">
             <?php echo $message; ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         <?php endif; ?>
 
@@ -283,38 +292,22 @@ $products = $stmt->fetchAll();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Real-time validation for product name
-        document.querySelector('input[name="name"]').addEventListener('input', function(e) {
-            const name = e.target.value;
-            if (name.length > 0) {
-                fetch('check_product.php?name=' + encodeURIComponent(name))
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.exists) {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Produk sudah ada!',
-                                text: 'Nama produk ini sudah terdaftar',
-                                showConfirmButton: false,
-                                timer: 2000
-                            });
-                            e.target.setCustomValidity('Produk sudah ada');
-                        } else {
-                            e.target.setCustomValidity('');
-                        }
-                    });
-            }
-        });
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php if (isset($_POST['action'])): ?>
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
 
-        // Show notification after form submission
-        <?php if (isset($_POST['action'])): ?>
-        Swal.fire({
-            icon: '<?php echo $messageType === 'success' ? 'success' : 'warning'; ?>',
-            title: '<?php echo $message; ?>',
-            showConfirmButton: false,
-            timer: 2000
+            Toast.fire({
+                icon: '<?php echo $messageType === 'success' ? 'success' : 'warning'; ?>',
+                title: '<?php echo $message; ?>'
+            });
+            <?php endif; ?>
         });
-        <?php endif; ?>
     </script>
 </body>
 

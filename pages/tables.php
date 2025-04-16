@@ -9,8 +9,17 @@ require_once $root_path . 'auth/auth.php';
 // Check if user has administrator role
 checkRole(['administrator']);
 
+// Initialize message variables
 $message = '';
 $messageType = '';
+
+// Get message from session if exists
+if (isset($_SESSION['message'])) {
+    $message = $_SESSION['message'];
+    $messageType = $_SESSION['message_type'];
+    unset($_SESSION['message']);
+    unset($_SESSION['message_type']);
+}
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -24,13 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $conn->prepare("SELECT COUNT(*) FROM tables WHERE table_number = ?");
                     $stmt->execute([$table_number]);
                     if ($stmt->fetchColumn() > 0) {
-                        $message = "Nomor meja $table_number sudah ada!";
-                        $messageType = "warning";
+                        $_SESSION['message'] = "Nomor meja $table_number sudah ada!";
+                        $_SESSION['message_type'] = "warning";
                     } else {
                         $stmt = $conn->prepare("INSERT INTO tables (table_number) VALUES (?)");
                         $stmt->execute([$table_number]);
-                        $message = "Meja berhasil ditambahkan!";
-                        $messageType = "success";
+                        $_SESSION['message'] = "Meja berhasil ditambahkan!";
+                        $_SESSION['message_type'] = "success";
                     }
                     break;
 
@@ -43,13 +52,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $conn->prepare("SELECT COUNT(*) FROM tables WHERE table_number = ? AND id != ?");
                     $stmt->execute([$table_number, $id]);
                     if ($stmt->fetchColumn() > 0) {
-                        $message = "Nomor meja $table_number sudah ada!";
-                        $messageType = "danger";
+                        $_SESSION['message'] = "Nomor meja $table_number sudah ada!";
+                        $_SESSION['message_type'] = "danger";
                     } else {
                         $stmt = $conn->prepare("UPDATE tables SET table_number = ?, status = ? WHERE id = ?");
                         $stmt->execute([$table_number, $status, $id]);
-                        $message = "Meja berhasil diupdate!";
-                        $messageType = "success";
+                        $_SESSION['message'] = "Meja berhasil diupdate!";
+                        $_SESSION['message_type'] = "success";
                     }
                     break;
 
@@ -60,19 +69,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $conn->prepare("SELECT COUNT(*) FROM orders WHERE table_id = ? AND status = 'pending'");
                     $stmt->execute([$id]);
                     if ($stmt->fetchColumn() > 0) {
-                        $message = "Meja tidak bisa dihapus karena sedang digunakan!";
-                        $messageType = "danger";
+                        $_SESSION['message'] = "Meja tidak bisa dihapus karena sedang digunakan!";
+                        $_SESSION['message_type'] = "danger";
                     } else {
                         $stmt = $conn->prepare("DELETE FROM tables WHERE id = ?");
                         $stmt->execute([$id]);
-                        $message = "Meja berhasil dihapus!";
-                        $messageType = "success";
+                        $_SESSION['message'] = "Meja berhasil dihapus!";
+                        $_SESSION['message_type'] = "success";
                     }
                     break;
             }
         } catch (Exception $e) {
-            $message = "Terjadi kesalahan: " . $e->getMessage();
-            $messageType = "danger";
+            $_SESSION['message'] = "Terjadi kesalahan: " . $e->getMessage();
+            $_SESSION['message_type'] = "danger";
         }
         header('Location: tables.php');
         exit();
@@ -102,7 +111,7 @@ $tables = $stmt->fetchAll();
         <?php if ($message): ?>
         <div class="alert alert-<?php echo $messageType; ?> alert-dismissible fade show" role="alert">
             <?php echo $message; ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         <?php endif; ?>
 
@@ -242,38 +251,22 @@ $tables = $stmt->fetchAll();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-    // Real-time validation for table number
-    document.querySelector('input[name="table_number"]').addEventListener('input', function(e) {
-        const number = e.target.value;
-        if (number.length > 0) {
-            fetch('check_table.php?number=' + encodeURIComponent(number))
-                .then(response => response.json())
-                .then(data => {
-                    if (data.exists) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Meja sudah ada!',
-                            text: 'Nomor meja ini sudah terdaftar',
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
-                        e.target.setCustomValidity('Meja sudah ada');
-                    } else {
-                        e.target.setCustomValidity('');
-                    }
-                });
-        }
-    });
+    document.addEventListener('DOMContentLoaded', function() {
+        <?php if (isset($_POST['action'])): ?>
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
 
-    // Show notification after form submission
-    <?php if (isset($_POST['action'])): ?>
-    Swal.fire({
-        icon: '<?php echo $messageType === 'success' ? 'success' : 'warning'; ?>',
-        title: '<?php echo $message; ?>',
-        showConfirmButton: false,
-        timer: 2000
+        Toast.fire({
+            icon: '<?php echo $messageType === 'success' ? 'success' : 'warning'; ?>',
+            title: '<?php echo $message; ?>'
+        });
+        <?php endif; ?>
     });
-    <?php endif; ?>
     </script>
 </body>
 
