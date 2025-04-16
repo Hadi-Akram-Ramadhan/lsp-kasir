@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute([$name]);
                     if ($stmt->fetchColumn() > 0) {
                         $message = "Produk dengan nama '$name' sudah ada!";
-                        $messageType = "danger";
+                        $messageType = "warning";
                     } else {
                         $stmt = $conn->prepare("INSERT INTO products (name, price, stock) VALUES (?, ?, ?)");
                         $stmt->execute([$name, $price, $stock]);
@@ -281,6 +281,41 @@ $products = $stmt->fetchAll();
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Real-time validation for product name
+        document.querySelector('input[name="name"]').addEventListener('input', function(e) {
+            const name = e.target.value;
+            if (name.length > 0) {
+                fetch('check_product.php?name=' + encodeURIComponent(name))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Produk sudah ada!',
+                                text: 'Nama produk ini sudah terdaftar',
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                            e.target.setCustomValidity('Produk sudah ada');
+                        } else {
+                            e.target.setCustomValidity('');
+                        }
+                    });
+            }
+        });
+
+        // Show notification after form submission
+        <?php if (isset($_POST['action'])): ?>
+        Swal.fire({
+            icon: '<?php echo $messageType === 'success' ? 'success' : 'warning'; ?>',
+            title: '<?php echo $message; ?>',
+            showConfirmButton: false,
+            timer: 2000
+        });
+        <?php endif; ?>
+    </script>
 </body>
 
 </html>

@@ -211,6 +211,17 @@ $reservations = getReservations($conn, $today);
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        <?php if ($message): ?>
+        Swal.fire({
+            icon: '<?php echo $messageType === 'success' ? 'success' : 'error'; ?>',
+            title: '<?php echo $message; ?>',
+            showConfirmButton: false,
+            timer: 2000
+        });
+        <?php endif; ?>
+    </script>
 </body>
 
 </html> 

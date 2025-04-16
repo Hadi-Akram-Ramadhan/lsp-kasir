@@ -256,12 +256,14 @@ function getFilteredUsers($conn, $role = null, $search = '') {
                                         <td><?php echo date('d/m/Y H:i', strtotime($user['created_at'])); ?></td>
                                         <td>
                                             <div class="btn-group">
-                                                <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                    data-bs-toggle="modal" data-bs-target="#editUserModal<?php echo $user['id']; ?>">
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editUserModal<?php echo $user['id']; ?>">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                    data-bs-toggle="modal" data-bs-target="#deleteUserModal<?php echo $user['id']; ?>">
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteUserModal<?php echo $user['id']; ?>">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
@@ -404,16 +406,16 @@ function getFilteredUsers($conn, $role = null, $search = '') {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-    // Handle edit user modal
-    document.getElementById('editUserModal<?php echo $user['id']; ?>').addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget;
-        const user = JSON.parse(button.getAttribute('data-user'));
-
-        document.getElementById('edit_user_id').value = user.id;
-        document.getElementById('edit_username').value = user.username;
-        document.getElementById('edit_role').value = user.role;
+    <?php if ($message): ?>
+    Swal.fire({
+        icon: '<?php echo $messageType === 'success' ? 'success' : 'error'; ?>',
+        title: '<?php echo $message; ?>',
+        showConfirmButton: false,
+        timer: 2000
     });
+    <?php endif; ?>
     </script>
 </body>
 
