@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once 'config.php';
 
 // Handle logout
 if (isset($_GET['logout'])) {
@@ -8,10 +9,6 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
-
-$VALID_USERNAME = "hadi";
-$VALID_PASSWORD_HASH = '$2a$12$EWEBt3xXIocTCOFgD4aLHO2ZYyOWJ7sXTyOJY2J5ld/RXGzfH3qb6'; 
-
 // Cek kalo udah login
 if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
     // Kalo belum login, redirect ke login page
@@ -19,7 +16,7 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
         $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
         
-        if ($username === $VALID_USERNAME && password_verify($password, $VALID_PASSWORD_HASH)) {
+        if ($username === ADMIN_USERNAME && password_verify($password, ADMIN_PASSWORD_HASH)) {
             $_SESSION['authenticated'] = true;
             $_SESSION['username'] = $username;
             header('Location: ' . $_SERVER['PHP_SELF']);
@@ -138,10 +135,6 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
 } else {
     // Kalo udah login, tampilin tombol logout
     ?>
-<div class="position-fixed top-0 end-0 p-3">
-    <a href="logout.php" class="btn btn-danger btn-sm">
-        <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
-</div>
+
 <?php
 } 

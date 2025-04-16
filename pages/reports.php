@@ -3,8 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$root_path = $_SERVER['DOCUMENT_ROOT'] . '/kasirdoy/';
-require_once $root_path . 'auth/auth.php';
+require_once '../auth/auth.php';
 
 // Check if user has appropriate role
 checkRole(['waiter', 'kasir', 'owner']);
@@ -131,6 +130,12 @@ $waiter_report = $stmt->fetchAll();
                                 <h5 class="mb-1">Laporan Penjualan</h5>
                                 <p class="text-muted mb-0">Ringkasan penjualan harian</p>
                             </div>
+                            <div>
+                                <a href="generate_pdf.php?type=sales&start_date=<?php echo $start_date; ?>&end_date=<?php echo $end_date; ?>"
+                                    class="btn btn-sm btn-primary">
+                                    <i class="bi bi-file-pdf me-1"></i>Generate PDF
+                                </a>
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
@@ -166,6 +171,12 @@ $waiter_report = $stmt->fetchAll();
                             <div>
                                 <h5 class="mb-1">Laporan Produk</h5>
                                 <p class="text-muted mb-0">Produk terlaris dan pendapatan</p>
+                            </div>
+                            <div>
+                                <a href="generate_pdf.php?type=products&start_date=<?php echo $start_date; ?>&end_date=<?php echo $end_date; ?>"
+                                    class="btn btn-sm btn-primary">
+                                    <i class="bi bi-file-pdf me-1"></i>Generate PDF
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -207,6 +218,12 @@ $waiter_report = $stmt->fetchAll();
                             <div>
                                 <h5 class="mb-1">Laporan Waiter</h5>
                                 <p class="text-muted mb-0">Performa waiter berdasarkan penjualan</p>
+                            </div>
+                            <div>
+                                <a href="generate_pdf.php?type=waiters&start_date=<?php echo $start_date; ?>&end_date=<?php echo $end_date; ?>"
+                                    class="btn btn-sm btn-primary">
+                                    <i class="bi bi-file-pdf me-1"></i>Generate PDF
+                                </a>
                             </div>
                         </div>
                     </div>

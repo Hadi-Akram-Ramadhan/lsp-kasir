@@ -11,6 +11,7 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
 
 $current_page = basename($_SERVER['PHP_SELF']);
 $user_name = $_SESSION['username'];
+$user_role = $_SESSION['role'];
 
 // Determine if we're in a subdirectory
 $is_in_pages = strpos($_SERVER['PHP_SELF'], '/pages/') !== false;
@@ -35,33 +36,50 @@ $base_path = $is_in_pages ? '../' : '';
                     </a>
                 </li>
 
+                <?php if ($user_role === 'administrator'): ?>
+                <li class="nav-item">
+                    <a class="nav-link <?php echo $current_page === 'tables.php' ? 'active' : ''; ?>"
+                        href="<?php echo $base_path; ?>pages/tables.php">
+                        <i class="bi bi-grid me-1"></i>Entri Meja
+                    </a>
+                </li>
+                <?php endif; ?>
+
+                <?php if (in_array($user_role, ['administrator', 'waiter'])): ?>
                 <li class="nav-item">
                     <a class="nav-link <?php echo $current_page === 'products.php' ? 'active' : ''; ?>"
                         href="<?php echo $base_path; ?>pages/products.php">
                         <i class="bi bi-box me-1"></i>Entri Barang
                     </a>
                 </li>
+                <?php endif; ?>
 
+                <?php if ($user_role === 'waiter'): ?>
                 <li class="nav-item">
                     <a class="nav-link <?php echo $current_page === 'orders.php' ? 'active' : ''; ?>"
                         href="<?php echo $base_path; ?>pages/orders.php">
                         <i class="bi bi-cart me-1"></i>Entri Order
                     </a>
                 </li>
+                <?php endif; ?>
 
+                <?php if ($user_role === 'kasir'): ?>
                 <li class="nav-item">
                     <a class="nav-link <?php echo $current_page === 'transactions.php' ? 'active' : ''; ?>"
                         href="<?php echo $base_path; ?>pages/transactions.php">
                         <i class="bi bi-cash-stack me-1"></i>Entri Transaksi
                     </a>
                 </li>
+                <?php endif; ?>
 
+                <?php if (in_array($user_role, ['waiter', 'kasir', 'owner'])): ?>
                 <li class="nav-item">
                     <a class="nav-link <?php echo $current_page === 'reports.php' ? 'active' : ''; ?>"
                         href="<?php echo $base_path; ?>pages/reports.php">
                         <i class="bi bi-file-earmark-text me-1"></i>Generate Laporan
                     </a>
                 </li>
+                <?php endif; ?>
 
                 <li class="nav-item">
                     <a class="nav-link <?php echo $current_page === 'notifications.php' ? 'active' : ''; ?>"
