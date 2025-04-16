@@ -8,7 +8,7 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
-// Hardcoded credentials (ganti ini dengan username dan password lo)
+
 $VALID_USERNAME = "hadi";
 $VALID_PASSWORD_HASH = '$2a$12$EWEBt3xXIocTCOFgD4aLHO2ZYyOWJ7sXTyOJY2J5ld/RXGzfH3qb6'; 
 
