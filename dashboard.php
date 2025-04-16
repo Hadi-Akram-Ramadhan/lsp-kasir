@@ -1,23 +1,16 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once 'auth/protect.php';
 
 $root_path = $_SERVER['DOCUMENT_ROOT'] . '/kasirdoy/';
-require_once $root_path . 'auth/auth.php';
+require_once $root_path . 'config/database.php';
 require_once $root_path . 'helpers/activity_log.php';
 require_once $root_path . 'helpers/cashier_shift.php';
 require_once $root_path . 'helpers/reservation.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: /kasirdoy/auth/login.php");
-    exit;
-}
-
-$user_id = $_SESSION['user_id'];
-$user_role = $_SESSION['role'];
-$user_name = $_SESSION['username'];
+// Get user info from session
+$user_id = $_SESSION['user_id'] ?? null;
+$user_role = $_SESSION['role'] ?? null;
+$user_name = $_SESSION['username'] ?? null;
 
 // Get recent activity logs
 $activity_logs = getActivityLogs($conn, 5);

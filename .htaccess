@@ -1,2 +1,19 @@
+# Prevent directory listing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "^(config\.php|\.htaccess|\.git|README\.md)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect sensitive directories
+<IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^([a-zA-Z0-9]+)$ index.php?x=$1
+    RewriteRule ^(config|auth|helpers)/.*$ - [F,L]
+    
+</IfModule>
+
+# Default rewrite rules
+RewriteEngine On
+RewriteRule ^([a-zA-Z0-9]+)$ index.php?x=$1

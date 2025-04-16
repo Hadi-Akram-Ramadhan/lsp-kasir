@@ -4,13 +4,12 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: /kasirdoy/auth/login.php");
+if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
+    header("Location: index.php");
     exit;
 }
 
 $current_page = basename($_SERVER['PHP_SELF']);
-$user_role = $_SESSION['role'];
 $user_name = $_SESSION['username'];
 
 // Determine if we're in a subdirectory
@@ -29,68 +28,40 @@ $base_path = $is_in_pages ? '../' : '';
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                <?php if (in_array($user_role, ['administrator', 'waiter', 'kasir', 'owner'])): ?>
                 <li class="nav-item">
                     <a class="nav-link <?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>"
                         href="<?php echo $base_path; ?>dashboard.php">
                         <i class="bi bi-house-door me-1"></i>Dashboard
                     </a>
                 </li>
-                <?php endif; ?>
 
-                <?php if ($user_role === 'administrator'): ?>
-                <li class="nav-item">
-                    <a class="nav-link <?php echo $current_page === 'users.php' ? 'active' : ''; ?>"
-                        href="<?php echo $base_path; ?>pages/users.php">
-                        <i class="bi bi-people me-1"></i>Users
-                    </a>
-                </li>
-                <?php endif; ?>
-
-                <?php if ($user_role === 'administrator'): ?>
-                <li class="nav-item">
-                    <a class="nav-link <?php echo $current_page === 'tables.php' ? 'active' : ''; ?>"
-                        href="<?php echo $base_path; ?>pages/tables.php">
-                        <i class="bi bi-table me-1"></i>Entri Meja
-                    </a>
-                </li>
-                <?php endif; ?>
-
-                <?php if (in_array($user_role, ['administrator', 'waiter'])): ?>
                 <li class="nav-item">
                     <a class="nav-link <?php echo $current_page === 'products.php' ? 'active' : ''; ?>"
                         href="<?php echo $base_path; ?>pages/products.php">
                         <i class="bi bi-box me-1"></i>Entri Barang
                     </a>
                 </li>
-                <?php endif; ?>
 
-                <?php if ($user_role === 'waiter'): ?>
                 <li class="nav-item">
                     <a class="nav-link <?php echo $current_page === 'orders.php' ? 'active' : ''; ?>"
                         href="<?php echo $base_path; ?>pages/orders.php">
                         <i class="bi bi-cart me-1"></i>Entri Order
                     </a>
                 </li>
-                <?php endif; ?>
 
-                <?php if ($user_role === 'kasir'): ?>
                 <li class="nav-item">
                     <a class="nav-link <?php echo $current_page === 'transactions.php' ? 'active' : ''; ?>"
                         href="<?php echo $base_path; ?>pages/transactions.php">
                         <i class="bi bi-cash-stack me-1"></i>Entri Transaksi
                     </a>
                 </li>
-                <?php endif; ?>
 
-                <?php if (in_array($user_role, ['waiter', 'kasir', 'owner'])): ?>
                 <li class="nav-item">
                     <a class="nav-link <?php echo $current_page === 'reports.php' ? 'active' : ''; ?>"
                         href="<?php echo $base_path; ?>pages/reports.php">
                         <i class="bi bi-file-earmark-text me-1"></i>Generate Laporan
                     </a>
                 </li>
-                <?php endif; ?>
 
                 <li class="nav-item">
                     <a class="nav-link <?php echo $current_page === 'notifications.php' ? 'active' : ''; ?>"
@@ -99,23 +70,19 @@ $base_path = $is_in_pages ? '../' : '';
                     </a>
                 </li>
             </ul>
-
-            <div class="d-flex align-items-center">
-                <div class="dropdown">
-                    <a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button"
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                         data-bs-toggle="dropdown">
-                        <i class="bi bi-person-circle me-1"></i>
-                        <?php echo htmlspecialchars($user_name); ?>
+                        <i class="bi bi-person-circle me-1"></i><?php echo htmlspecialchars($user_name); ?>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li>
-                            <a class="dropdown-item" href="<?php echo $base_path; ?>auth/logout.php">
+                        <li><a class="dropdown-item" href="<?php echo $base_path; ?>logout.php">
                                 <i class="bi bi-box-arrow-right me-2"></i>Logout
-                            </a>
-                        </li>
+                            </a></li>
                     </ul>
-                </div>
-            </div>
+                </li>
+            </ul>
         </div>
     </div>
 </nav>
