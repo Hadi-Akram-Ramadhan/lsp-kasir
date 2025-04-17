@@ -1,5 +1,7 @@
 <?php
+/*ilangin ini kalo mau ilangin login kedua
 require_once 'auth/protect.php';
+*/
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
