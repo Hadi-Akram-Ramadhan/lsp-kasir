@@ -7,4 +7,7 @@ define('DB_NAME', 'kasirdoy');
 
 // Admin credentials
 define('ADMIN_USERNAME', 'hadi');
-define('ADMIN_PASSWORD_HASH', '$2a$12$EWEBt3xXIocTCOFgD4aLHO2ZYyOWJ7sXTyOJY2J5ld/RXGzfH3qb6'); 
+define('ADMIN_PASSWORD_HASH', '$2a$12$EWEBt3xXIocTCOFgD4aLHO2ZYyOWJ7sXTyOJY2J5ld/RXGzfH3qb6');
+
+// Protection settings
+define('PROTECTION_ENABLED', false); // Set false to disable protection 
