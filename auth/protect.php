@@ -2,6 +2,13 @@
 session_start();
 require_once 'config.php';
 
+// Skip protection if disabled
+if (!PROTECTION_ENABLED) {
+    // Set default session values when protection is disabled
+    $_SESSION['authenticated'] = true;
+    return;
+}
+
 // Handle logout
 if (isset($_GET['logout'])) {
     session_destroy();
