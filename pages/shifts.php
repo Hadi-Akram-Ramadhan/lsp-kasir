@@ -122,7 +122,8 @@ $shift_report = getShiftReport($conn, $start_date, $end_date);
                                             <div class="flex-grow-1 ms-3">
                                                 <h6 class="card-title mb-1">Total Penjualan</h6>
                                                 <p class="mb-0">
-                                                    Rp <?php echo number_format($active_shift['total_amount'], 0, ',', '.'); ?>
+                                                    Rp
+                                                    <?php echo number_format($active_shift['total_amount'], 0, ',', '.'); ?>
                                                 </p>
                                             </div>
                                         </div>
@@ -202,4 +203,4 @@ $shift_report = getShiftReport($conn, $start_date, $end_date);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
-</html> 
+</html>

@@ -13,16 +13,16 @@ if (isset($_GET['logout'])) {
 if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
     // Kalo belum login, redirect ke login page
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $username = $_POST['username'] ?? '';
+        $admin = $_POST['admin'] ?? '';
         $password = $_POST['password'] ?? '';
         
-        if ($username === ADMIN_USERNAME && password_verify($password, ADMIN_PASSWORD_HASH)) {
+        if ($admin === ADMIN_USERNAME && password_verify($password, ADMIN_PASSWORD_HASH)) {
             $_SESSION['authenticated'] = true;
-            $_SESSION['username'] = $username;
+            $_SESSION['admin'] = $admin;
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
         } else {
-            $error = "Username atau password salah!";
+            $error = "admin atau password salah!";
         }
     }
     
@@ -108,10 +108,10 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
             <?php endif; ?>
             <form method="POST">
                 <div class="mb-4">
-                    <label class="form-label">Username</label>
+                    <label class="form-label">admin</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-user"></i></span>
-                        <input type="text" name="username" class="form-control" required>
+                        <input type="text" name="admin" class="form-control" required>
                     </div>
                 </div>
                 <div class="mb-4">

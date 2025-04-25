@@ -16,6 +16,10 @@ $messageType = '';
 $start_date = $_GET['start_date'] ?? date('Y-m-01');
 $end_date = $_GET['end_date'] ?? date('Y-m-t');
 
+// Adjust date ranges to include full days
+$start_datetime = $start_date . ' 00:00:00';
+$end_datetime = $end_date . ' 23:59:59';
+
 // Get sales report
 $stmt = $conn->prepare("
     SELECT 
@@ -27,7 +31,7 @@ $stmt = $conn->prepare("
     GROUP BY DATE(t.created_at)
     ORDER BY date DESC
 ");
-$stmt->execute([$start_date, $end_date]);
+$stmt->execute([$start_datetime, $end_datetime]);
 $sales_report = $stmt->fetchAll();
 
 // Get product report
@@ -41,10 +45,10 @@ $stmt = $conn->prepare("
     JOIN orders o ON oi.order_id = o.id
     JOIN transactions t ON o.id = t.order_id
     WHERE t.created_at BETWEEN ? AND ?
-    GROUP BY p.id
+    GROUP BY p.id, p.name
     ORDER BY total_quantity DESC
 ");
-$stmt->execute([$start_date, $end_date]);
+$stmt->execute([$start_datetime, $end_datetime]);
 $product_report = $stmt->fetchAll();
 
 // Get waiter performance report
@@ -57,10 +61,10 @@ $stmt = $conn->prepare("
     JOIN users u ON o.waiter_id = u.id
     JOIN transactions t ON o.id = t.order_id
     WHERE t.created_at BETWEEN ? AND ?
-    GROUP BY u.id
+    GROUP BY u.id, u.username
     ORDER BY total_sales DESC
 ");
-$stmt->execute([$start_date, $end_date]);
+$stmt->execute([$start_datetime, $end_datetime]);
 $waiter_report = $stmt->fetchAll();
 ?>
 

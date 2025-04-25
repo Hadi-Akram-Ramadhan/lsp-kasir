@@ -96,17 +96,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $order_id = $_POST['order_id'];
                 $table_id = $_POST['table_id'];
 
-                // Update order status
-                $stmt = $conn->prepare("UPDATE orders SET status = 'completed' WHERE id = ?");
-                $stmt->execute([$order_id]);
+                try {
+                    $conn->beginTransaction();
 
-                // Update table status
-                $stmt = $conn->prepare("UPDATE tables SET status = 'available' WHERE id = ?");
-                $stmt->execute([$table_id]);
+                    // Update order status
+                    $stmt = $conn->prepare("UPDATE orders SET status = 'completed' WHERE id = ?");
+                    $stmt->execute([$order_id]);
 
-                // Log activity
-                $table_number = $available_tables[array_search($table_id, array_column($available_tables, 'id'))]['table_number'];
-                logActivity($conn, $_SESSION['user_id'], 'update', "Menyelesaikan order untuk Meja $table_number");
+                    // Update table status
+                    $stmt = $conn->prepare("UPDATE tables SET status = 'available' WHERE id = ?");
+                    $stmt->execute([$table_id]);
+
+                    // Get order details for reservation
+                    $stmt = $conn->prepare("
+                        SELECT o.*, COUNT(oi.id) as total_items 
+                        FROM orders o 
+                        JOIN order_items oi ON o.id = oi.order_id 
+                        WHERE o.id = ?
+                        GROUP BY o.id
+                    ");
+                    $stmt->execute([$order_id]);
+                    $order = $stmt->fetch();
+
+                    // Add to table_reservations
+                    $stmt = $conn->prepare("
+                        INSERT INTO table_reservations 
+                        (table_id, customer_name, customer_phone, reservation_time, party_size, status) 
+                        VALUES (?, 'Walk-in', '-', NOW(), ?, 'confirmed')
+                    ");
+                    $stmt->execute([$table_id, $order['total_items']]);
+
+                    $conn->commit();
+
+                    // Log activity
+                    $table_number = $available_tables[array_search($table_id, array_column($available_tables, 'id'))]['table_number'];
+                    logActivity($conn, $_SESSION['user_id'], 'update', "Menyelesaikan order untuk Meja $table_number");
+
+                } catch (Exception $e) {
+                    $conn->rollBack();
+                    throw $e;
+                }
                 break;
 
             case 'cancel':
@@ -323,14 +352,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        <?php if ($message): ?>
-        Swal.fire({
-            icon: '<?php echo $messageType === 'success' ? 'success' : 'error'; ?>',
-            title: '<?php echo $message; ?>',
-            showConfirmButton: false,
-            timer: 2000
-        });
-        <?php endif; ?>
+    <?php if ($message): ?>
+    Swal.fire({
+        icon: '<?php echo $messageType === 'success' ? 'success' : 'error'; ?>',
+        title: '<?php echo $message; ?>',
+        showConfirmButton: false,
+        timer: 2000
+    });
+    <?php endif; ?>
     </script>
 </body>
 

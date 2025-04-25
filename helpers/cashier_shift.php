@@ -1,8 +1,8 @@
 <?php
 function startShift($conn, $user_id) {
     $stmt = $conn->prepare("
-        INSERT INTO cashier_shifts (user_id, start_time) 
-        VALUES (?, CURRENT_TIMESTAMP)
+        INSERT INTO cashier_shifts (user_id, start_time, status) 
+        VALUES (?, NOW(), 'active')
     ");
     $stmt->execute([$user_id]);
     return $conn->lastInsertId();
@@ -47,7 +47,8 @@ function getShiftReport($conn, $start_date, $end_date) {
             TIMEDIFF(cs.end_time, cs.start_time) as duration
         FROM cashier_shifts cs
         JOIN users u ON cs.user_id = u.id
-        WHERE cs.start_time BETWEEN ? AND ?
+        WHERE DATE(cs.start_time) >= ? 
+        AND DATE(cs.start_time) <= ?
         ORDER BY cs.start_time DESC
     ");
     $stmt->execute([$start_date, $end_date]);
