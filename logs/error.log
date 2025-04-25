@@ -5,3 +5,34 @@
 [2025-04-25 14:13:45] [LOGIN] Successful login for user: owner
 
 [2025-04-25 14:19:37] [LOGIN] Successful login for user: admin
+[2025-04-25 19:17:44] [PHP] PHP Error [2]: Undefined array key "id" in C:\xampp\htdocs\kasirdoy\auth\auth.php on line 24
+[2025-04-25 19:17:44] [LOGIN] Successful login for user: admin
+[2025-04-25 19:17:44] [EXCEPTION] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'kasirdoy.activity_logs' doesn't exist
+[2025-04-25 19:17:54] [PHP] PHP Error [2]: Undefined array key "id" in C:\xampp\htdocs\kasirdoy\auth\auth.php on line 24
+[2025-04-25 19:17:54] [LOGIN] Successful login for user: admin
+[2025-04-25 19:17:54] [EXCEPTION] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'kasirdoy.activity_logs' doesn't exist
+[2025-04-25 19:18:48] [PHP] PHP Error [2]: Undefined array key "id" in C:\xampp\htdocs\kasirdoy\auth\auth.php on line 24
+[2025-04-25 19:18:48] [LOGIN] Successful login for user: admin
+[2025-04-25 19:18:48] [EXCEPTION] SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.id' in 'on clause'
+[2025-04-25 19:18:50] [EXCEPTION] SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.id' in 'on clause'
+[2025-04-25 19:18:50] [EXCEPTION] SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.id' in 'on clause'
+[2025-04-25 19:18:51] [EXCEPTION] SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.id' in 'on clause'
+[2025-04-25 19:18:57] [PHP] PHP Error [2]: Undefined array key "id" in C:\xampp\htdocs\kasirdoy\auth\auth.php on line 24
+[2025-04-25 19:18:57] [LOGIN] Successful login for user: admin
+[2025-04-25 19:18:57] [EXCEPTION] SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.id' in 'on clause'
+[2025-04-25 19:20:02] [PHP] PHP Error [2]: Undefined array key "id" in C:\xampp\htdocs\kasirdoy\auth\auth.php on line 24
+[2025-04-25 19:20:02] [LOGIN] Successful login for user: admin
+[2025-04-25 19:20:02] [EXCEPTION] SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.id' in 'on clause'
+[2025-04-25 19:20:11] [PHP] PHP Error [2]: Undefined array key "id" in C:\xampp\htdocs\kasirdoy\auth\auth.php on line 24
+[2025-04-25 19:20:11] [LOGIN] Successful login for user: admin
+[2025-04-25 19:20:11] [EXCEPTION] SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.id' in 'on clause'
+[2025-04-25 19:20:48] [PHP] PHP Error [2]: Undefined array key "id" in C:\xampp\htdocs\kasirdoy\auth\auth.php on line 24
+[2025-04-25 19:20:48] [LOGIN] Successful login for user: admin
+[2025-04-25 19:20:48] [EXCEPTION] SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.id' in 'on clause'
+[2025-04-25 19:21:37] [LOGIN] Too many login attempts for user: waiter
+[2025-04-25 19:21:37] [EXCEPTION] Too many failed login attempts. Please try again later.
+[2025-04-25 19:21:43] [LOGIN] Too many login attempts for user: waiter
+[2025-04-25 19:21:43] [EXCEPTION] Too many failed login attempts. Please try again later.
+[2025-04-25 19:22:10] [PHP] PHP Error [2]: Undefined array key "id" in C:\xampp\htdocs\kasirdoy\auth\auth.php on line 24
+[2025-04-25 19:22:10] [LOGIN] Successful login for user: admin
+[2025-04-25 19:22:10] [EXCEPTION] SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.id' in 'on clause'
