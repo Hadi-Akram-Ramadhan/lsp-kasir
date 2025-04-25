@@ -292,22 +292,22 @@ $products = $stmt->fetchAll();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            <?php if (isset($_POST['action'])): ?>
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
-            });
-
-            Toast.fire({
-                icon: '<?php echo $messageType === 'success' ? 'success' : 'warning'; ?>',
-                title: '<?php echo $message; ?>'
-            });
-            <?php endif; ?>
+    document.addEventListener('DOMContentLoaded', function() {
+        <?php if (isset($_POST['action'])): ?>
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
         });
+
+        Toast.fire({
+            icon: '<?php echo $messageType === 'success' ? 'success' : 'warning'; ?>',
+            title: '<?php echo $message; ?>'
+        });
+        <?php endif; ?>
+    });
     </script>
 </body>
 
