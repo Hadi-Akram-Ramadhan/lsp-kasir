@@ -240,26 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?>
                                         </small>
                                     </div>
-                                    <div class="btn-group">
-                                        <form method="POST" class="me-2">
-                                            <input type="hidden" name="action" value="complete">
-                                            <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
-                                            <input type="hidden" name="table_id"
-                                                value="<?php echo $order['table_id']; ?>">
-                                            <button type="submit" class="btn btn-success btn-sm">
-                                                <i class="bi bi-check-circle me-1"></i>Selesai
-                                            </button>
-                                        </form>
-                                        <form method="POST">
-                                            <input type="hidden" name="action" value="cancel">
-                                            <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
-                                            <input type="hidden" name="table_id"
-                                                value="<?php echo $order['table_id']; ?>">
-                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                <i class="bi bi-x-circle me-1"></i>Batal
-                                            </button>
-                                        </form>
-                                    </div>
+
                                 </div>
                                 <p class="card-text mb-0">
                                     <i class="bi bi-list-ul me-2 text-muted"></i>

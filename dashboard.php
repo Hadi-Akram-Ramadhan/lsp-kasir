@@ -384,15 +384,26 @@ $unread_notifications = $stmt->fetchColumn();
                     </div>
                     <div class="card-body">
                         <?php if ($active_shift): ?>
-                        <div class="alert alert-success mb-0">
+                        <div class="alert alert-success mb-3">
                             <i class="bi bi-check-circle me-2"></i>
                             Shift aktif sejak <?php echo date('H:i', strtotime($active_shift['start_time'])); ?>
                         </div>
+                        <form action="actions/end_shift.php" method="POST">
+                            <input type="hidden" name="shift_id" value="<?php echo $active_shift['id']; ?>">
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="bi bi-stop-circle me-2"></i>Akhiri Shift
+                            </button>
+                        </form>
                         <?php else: ?>
-                        <div class="alert alert-warning mb-0">
+                        <div class="alert alert-warning mb-3">
                             <i class="bi bi-exclamation-circle me-2"></i>
                             Tidak ada shift aktif
                         </div>
+                        <form action="actions/start_shift.php" method="POST">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-play-circle me-2"></i>Mulai Shift
+                            </button>
+                        </form>
                         <?php endif; ?>
                     </div>
                 </div>
