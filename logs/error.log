@@ -36,3 +36,4 @@
 [2025-04-25 19:22:10] [PHP] PHP Error [2]: Undefined array key "id" in C:\xampp\htdocs\kasirdoy\auth\auth.php on line 24
 [2025-04-25 19:22:10] [LOGIN] Successful login for user: admin
 [2025-04-25 19:22:10] [EXCEPTION] SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.id' in 'on clause'
+[2025-04-25 19:54:02] [LOGIN] Successful login for user: admin
